@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from matthuisman.controller import Controller as BaseController
-from matthuisman.exceptions import InputError
+from matthuisman.exceptions import InputError, ViewError
 
 from .api import API
 from . import config
@@ -25,27 +25,77 @@ class Controller(BaseController):
 
         self._view.items(items)
 
-    def my_courses(self, params):
+    def _require_login(self):
         if not self._api.logged_in:
             self._do_login()
 
+    def my_courses(self, params):
+        self._require_login()
+
         func = lambda: self._api.my_courses()
-        data = self._addon.cache.function('my_courses', func, expires=config.COURSES_EXPIRY)
+        data = self._addon.cache.function('my_courses', func, expires=config.MY_COURSES_EXPIRY)
 
         items = []
         for course in data['results']:
+            plot = '{0}\n\n{1} Lectures ({2})'.format(self._strip_tags(course['headline'].encode('utf-8').strip()), course['num_published_lectures'], course['content_info'])
+
             items.append({
                 'title': course['title'],
                 'images': {'thumb': course['image_750x422']},
-                'info': {'plot': course['headline']},
-                'url': self._router.get(self.lectures, {'course_id': course['id']})
+                'info': {'plot': plot},
+                'url': self._router.get(self.course, {'id': course['id'], 'image': course['image_750x422'], 'title': course['title']})
             })
 
         self._view.items(items, title='My Courses')
 
-    def lectures(self, params):
-        pass
-    
+    def _strip_tags(self, text):
+        return text
+
+    def course(self, params):
+      #  self._require_login()
+
+        func = lambda: self._api.course_items(params['id'])
+        data = self._addon.cache.function('course_{}'.format(params['id']), func, expires=config.COURSE_EXPIRY)
+
+        items = []
+        for item in data['results']:
+            if item['_class'] == 'chapter':
+                items.append({
+                    'title': '~ [B]Section {}: {}[/B] ~'.format(item['object_index'], item['title']),
+                    'info': {'plot': self._strip_tags(item['description'])},
+                    'images': {'thumb': params.get('image')},
+                })
+            elif item['_class'] == 'lecture':
+                items.append({
+                    'title': item['title'],
+                    'images': {'thumb': item['asset']['thumbnail_url']},
+                    'url': self._router.get(self.play, {'id': item['asset']['id']}),
+                    'playable': True,
+                })
+
+        self._view.items(items, title=params.get('title'))
+
+
+    def play(self, params):
+        data = self._api.get_asset(params['id'])
+
+        url = None
+        for item in data['stream_urls']['Video']:
+            if item['type'] == 'application/x-mpegURL':
+                url = item['file']
+                break
+
+        if not url:
+            raise ViewError('No video url found')
+
+        item = {
+            'url': url,
+            'vid_type': 'hls',
+            'options': {'use_ia_hls': self._addon.settings.getBool('use_ia_hls')},
+        }
+
+        self._view.play(item)
+
     def login(self, params):
         self._do_login()
         self._view.refresh()
