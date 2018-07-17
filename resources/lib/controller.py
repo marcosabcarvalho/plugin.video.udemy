@@ -23,7 +23,7 @@ class Controller(BaseController):
 
         items.append({'title':'Settings', 'url': self._router.get(self.settings)})
 
-        self._view.items(items)
+        self._view.items(items, cache=False)
 
     def _require_login(self):
         if not self._api.logged_in:
@@ -33,7 +33,10 @@ class Controller(BaseController):
         self._require_login()
 
         func = lambda: self._api.my_courses()['results']
-        data = self._addon.cache.function('my_courses', func, expires=config.MY_COURSES_EXPIRY)
+        if self._addon.settings.getBool('use_cache'):
+            data = self._addon.cache.function('my_courses', func, expires=config.MY_COURSES_EXPIRY)
+        else:
+            data = func()
 
         items = []
         for course in data:
@@ -55,7 +58,11 @@ class Controller(BaseController):
         self._require_login()
 
         func = lambda: self._api.course_items(params['id'])['results']
-        data = self._addon.cache.function('course_{}'.format(params['id']), func, expires=config.COURSE_EXPIRY)
+
+        if self._addon.settings.getBool('use_cache'):
+            data = self._addon.cache.function('course_{}'.format(params['id']), func, expires=config.COURSE_EXPIRY)
+        else:
+            data = func()
 
         items = []
         for item in data:
@@ -74,7 +81,6 @@ class Controller(BaseController):
                 })
 
         self._view.items(items, title=params.get('title'))
-
 
     def play(self, params):
         self._require_login()
@@ -108,14 +114,12 @@ class Controller(BaseController):
 
     def login(self, params):
         self._do_login()
-        self._view.refresh()
 
     def logout(self, params):
         if not self._view.dialog_yes_no("Are you sure you want to logout?"):
             raise InputError()
 
         self._api.logout()
-        self._view.refresh()
 
     def _do_login(self):
         username = self._view.get_input("Udemy Email", default=self._addon.data.get('username', '')).strip()

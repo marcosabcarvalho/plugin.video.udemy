@@ -1,5 +1,6 @@
 <strings>
     <string id="30001">Use Inpustream HLS</string>
+    <string id="30002">Cache Enabled</string>
 
     <string id="30100">Clear Data</string>
 </strings>
