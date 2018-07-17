@@ -1,3 +1,4 @@
+import re
 from collections import OrderedDict
 
 from matthuisman.controller import Controller as BaseController
@@ -40,19 +41,19 @@ class Controller(BaseController):
 
         items = []
         for course in data:
-            plot = '{0}\n\n{1} Lectures ({2})'.format(self._strip_tags(course['headline'].encode('utf-8').strip()), course['num_published_lectures'], course['content_info'])
+            plot = '{}\n\n{} Lectures ({})\n{}% Complete'.format(self._strip_tags(course['headline'].encode('utf-8').strip()), course['num_published_lectures'], course['content_info'], course['completion_ratio'])
 
             items.append({
                 'title': course['title'],
-                'images': {'thumb': course['image_750x422']},
+                'images': {'thumb': course['image_480x270']},
                 'info': {'plot': plot},
-                'url': self._router.get(self.course, {'id': course['id'], 'image': course['image_750x422'], 'title': course['title']})
+                'url': self._router.get(self.course, {'id': course['id']})
             })
 
         self._view.items(items, title='My Courses')
 
     def _strip_tags(self, text):
-        return text
+        return re.sub('<[^>]*>', '', text)
 
     def course(self, params):
         self._require_login()
@@ -65,41 +66,43 @@ class Controller(BaseController):
             data = func()
 
         items = []
+        _title = params.get('title')
         for item in data:
             if item['_class'] == 'chapter':
                 items.append({
                     'title': '~ [B]Section {}: {}[/B] ~'.format(item['object_index'], item['title']),
                     'info': {'plot': self._strip_tags(item['description'])},
-                    'images': {'thumb': params.get('image')},
+                    'images': {'thumb': item['course']['image_480x270']},
                 })
-            elif item['_class'] == 'lecture' and item['asset']['asset_type'] == 'Video':
+                print(item)
+                _title = item['course']['title']
+            elif item['_class'] == 'lecture' and item['is_published'] and item['asset']['asset_type'] in ('Video', 'Audio'):
                 items.append({
                     'title': item['title'],
-                    'images': {'thumb': item['asset']['thumbnail_url']},
+                    'info': {'plot': self._strip_tags(item['description']), 'duration': item['asset']['length']},
+                    'images': {'thumb': item['thumbnail_url']},
                     'url': self._router.get(self.play, {'id': item['asset']['id']}),
                     'playable': True,
                 })
 
-        self._view.items(items, title=params.get('title'))
+        self._view.items(items, title=_title)
 
     def play(self, params):
         self._require_login()
 
         use_ia_hls = self._addon.settings.getBool('use_ia_hls')
         data       = self._api.get_asset(params['id'])
+        streams    = data.get('stream_urls', {}).get('Video') or stream_urls.get('Audio')
+
+        if not streams:
+            raise ViewError('No streams found')
 
         urls = []
-        try:
-            for item in data['stream_urls']['Video']:
-                if item['type'] == 'application/x-mpegURL':
-                    urls.append([item['file'], 'hls', use_ia_hls])
-                else:
-                    urls.append([item['file'], 'm3u8', int(item['label'])])
-
-            if not urls:
-                raise Exception()
-        except:
-            raise ViewError('No video url found')
+        for item in streams:
+            if item['type'] == 'application/x-mpegURL':
+                urls.append([item['file'], 'hls', use_ia_hls])
+            else:
+                urls.append([item['file'], item['type'], int(item['label'])])
 
         urls = sorted(urls, key=lambda x: (x[2] is True, x[2]), reverse=True)
         url, _type = urls[0][0:2]

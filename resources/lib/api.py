@@ -27,9 +27,9 @@ class API(object):
 
     def my_courses(self):
         params = {
-            'page_size'      : 9999,
-            'ordering'       : '-access_time,-enrolled',
-            'fields[course]' : '@min,image_750x422,headline,num_published_lectures,content_info',
+            'page_size'       : 9999,
+            'ordering'        : '-access_time,-enrolled',
+            'fields[course]'  : 'id,title,image_480x270,image_750x422,headline,num_published_lectures,content_info,completion_ratio',
         }
 
         return self._session.get(config.BASE_API.format('/users/me/subscribed-courses'), params=params).json()
@@ -37,19 +37,19 @@ class API(object):
     def course_items(self, course_id):
         params = {
             'page_size'        : 9999,
-            'fields[asset]'    : '@min,title,filename,asset_type,length,status,thumbnail_url',
-            'fields[chapter]'  : '@min,description,object_index,title,sort_order',
-            'fields[lecture]'  : '@min,object_index,asset,supplementary_assets,sort_order,is_published,is_free',
-            'fields[practice]' : '@none',
-            'fields[quiz]'     : '@none',
+            'fields[chapter]'  : 'description,object_index,title,course',
+            'fields[course]'   : 'image_480x270,title',
+            'fields[lecture]'  : 'title,object_index,description,is_published,created,thumbnail_url,asset',
+            'fields[asset]'    : 'asset_type,length,status',
+            'fields[practice]' : 'id',
+            'fields[quiz]'     : 'id',
         }
 
         return self._session.get(config.BASE_API.format('/courses/{}/cached-subscriber-curriculum-items'.format(course_id)), params=params).json()
 
     def get_asset(self, asset_id):
         params = {
-            'fields[asset]'   : '@min,status,delayed_asset_message,processing_errors,time_estimation,stream_urls,captions',
-            'fields[caption]' : '@default,is_translation',
+            'fields[asset]'   : '@min,status,stream_urls,thumbnail_url,length,course',
         }
 
         return self._session.get(config.BASE_API.format('/assets/{0}'.format(asset_id)), params=params).json()
