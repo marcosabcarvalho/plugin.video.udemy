@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+  <setting label="30001" type="bool" id="use_ia_hls" default="true"/>
+
+  <setting label="30100" type="action" action="RunPlugin(plugin://$ID/?_route=clear)"/>
+</settings>
