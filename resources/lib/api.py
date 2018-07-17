@@ -75,3 +75,8 @@ class API(object):
         self._set_auth(access_token)
         self._addon.data['access_token'] = access_token
         self._logged_in = True
+
+    def logout(self):
+        self._session.headers.clear()
+        self._addon.data['access_token'] = None
+        self._logged_in = False

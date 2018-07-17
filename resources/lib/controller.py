@@ -32,11 +32,11 @@ class Controller(BaseController):
     def my_courses(self, params):
         self._require_login()
 
-        func = lambda: self._api.my_courses()
+        func = lambda: self._api.my_courses()['results']
         data = self._addon.cache.function('my_courses', func, expires=config.MY_COURSES_EXPIRY)
 
         items = []
-        for course in data['results']:
+        for course in data:
             plot = '{0}\n\n{1} Lectures ({2})'.format(self._strip_tags(course['headline'].encode('utf-8').strip()), course['num_published_lectures'], course['content_info'])
 
             items.append({
@@ -52,20 +52,20 @@ class Controller(BaseController):
         return text
 
     def course(self, params):
-      #  self._require_login()
+        self._require_login()
 
-        func = lambda: self._api.course_items(params['id'])
+        func = lambda: self._api.course_items(params['id'])['results']
         data = self._addon.cache.function('course_{}'.format(params['id']), func, expires=config.COURSE_EXPIRY)
 
         items = []
-        for item in data['results']:
+        for item in data:
             if item['_class'] == 'chapter':
                 items.append({
                     'title': '~ [B]Section {}: {}[/B] ~'.format(item['object_index'], item['title']),
                     'info': {'plot': self._strip_tags(item['description'])},
                     'images': {'thumb': params.get('image')},
                 })
-            elif item['_class'] == 'lecture':
+            elif item['_class'] == 'lecture' and item['asset']['asset_type'] == 'Video':
                 items.append({
                     'title': item['title'],
                     'images': {'thumb': item['asset']['thumbnail_url']},
@@ -77,21 +77,31 @@ class Controller(BaseController):
 
 
     def play(self, params):
-        data = self._api.get_asset(params['id'])
+        self._require_login()
 
-        url = None
-        for item in data['stream_urls']['Video']:
-            if item['type'] == 'application/x-mpegURL':
-                url = item['file']
-                break
+        use_ia_hls = self._addon.settings.getBool('use_ia_hls')
+        data       = self._api.get_asset(params['id'])
 
-        if not url:
+        urls = []
+        try:
+            for item in data['stream_urls']['Video']:
+                if item['type'] == 'application/x-mpegURL':
+                    urls.append([item['file'], 'hls', use_ia_hls])
+                else:
+                    urls.append([item['file'], 'm3u8', int(item['label'])])
+
+            if not urls:
+                raise Exception()
+        except:
             raise ViewError('No video url found')
 
+        urls = sorted(urls, key=lambda x: (x[2] is True, x[2]), reverse=True)
+        url, _type = urls[0][0:2]
+   
         item = {
             'url': url,
-            'vid_type': 'hls',
-            'options': {'use_ia_hls': self._addon.settings.getBool('use_ia_hls')},
+            'vid_type': _type,
+            'options': {'use_ia_hls': use_ia_hls},
         }
 
         self._view.play(item)
