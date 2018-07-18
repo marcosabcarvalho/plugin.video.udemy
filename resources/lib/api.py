@@ -1,6 +1,5 @@
-import requests
-
-from matthuisman.util import process_brightcove, log
+from matthuisman.logger import log
+from matthuisman.session import Session
 from matthuisman.exceptions import LoginError
 
 from . import config
@@ -9,7 +8,7 @@ class API(object):
     def __init__(self, addon):
         self._addon = addon
 
-        self._session = requests.session()
+        self._session = Session()
         self._session.headers.update(config.HEADERS)
 
         access_token = self._addon.data.get('access_token')
@@ -37,9 +36,9 @@ class API(object):
     def course_items(self, course_id):
         params = {
             'page_size'        : 9999,
-            'fields[chapter]'  : 'description,object_index,title,course',
             'fields[course]'   : 'image_480x270,title',
-            'fields[lecture]'  : 'title,object_index,description,is_published,created,thumbnail_url,asset',
+            'fields[chapter]'  : 'description,object_index,title,course',
+            'fields[lecture]'  : 'title,object_index,description,is_published,created,thumbnail_url,progress_status,last_watched_second,asset',
             'fields[asset]'    : 'asset_type,length,status',
             'fields[practice]' : 'id',
             'fields[quiz]'     : 'id',
@@ -65,7 +64,7 @@ class API(object):
         }
         params = {'response_type': 'json'}
 
-        resp = self._session.post(config.LOGIN_URL, params=params, data=payload)
+        resp = self._session.post(config.LOGIN_URL, params=params, data=payload, obfuscate=['email', 'password'])
         access_token = resp.cookies.get('access_token')
         if not access_token:
             self._addon.data.pop('access_token', None)

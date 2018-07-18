@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from matthuisman.controller import Controller as BaseController
 from matthuisman.exceptions import InputError, ViewError
+from matthuisman.view import ListItem
 
 from .api import API
 from . import config
@@ -14,15 +15,15 @@ class Controller(BaseController):
 
     def home(self, params):
         items = [
-            {'title':'My Courses', 'url': self._router.get(self.my_courses)},
+            ListItem(label='My Courses', path=self._router.get(self.my_courses))
         ]
 
         if not self._api.logged_in:
-            items.append({'title':'[B]Login[/B]', 'url': self._router.get(self.login)})
+            items.append(ListItem(label='[B]Login[/B]', path=self._router.get(self.login)))
         else:
-            items.append({'title':'Logout', 'url': self._router.get(self.logout)})
+            items.append(ListItem(label='Logout', path=self._router.get(self.logout)))
 
-        items.append({'title':'Settings', 'url': self._router.get(self.settings)})
+        items.append(ListItem(label='Settings', path=self._router.get(self.settings)))
 
         self._view.items(items, cache=False)
 
@@ -43,12 +44,10 @@ class Controller(BaseController):
         for course in data:
             plot = '{}\n\n{} Lectures ({})\n{}% Complete'.format(self._strip_tags(course['headline'].encode('utf-8').strip()), course['num_published_lectures'], course['content_info'], course['completion_ratio'])
 
-            items.append({
-                'title': course['title'],
-                'images': {'thumb': course['image_480x270']},
-                'info': {'plot': plot},
-                'url': self._router.get(self.course, {'id': course['id']})
-            })
+            item = ListItem(label=course['title'], path=self._router.get(self.course, {'id': course['id']}))
+            item.setArt({'thumb': course['image_480x270']})
+            item.setInfo('video', {'plot': plot})
+            items.append(item)
 
         self._view.items(items, title='My Courses')
 
@@ -66,33 +65,36 @@ class Controller(BaseController):
             data = func()
 
         items = []
-        _title = params.get('title')
-        for item in data:
-            if item['_class'] == 'chapter':
-                items.append({
-                    'title': '~ [B]Section {}: {}[/B] ~'.format(item['object_index'], item['title']),
-                    'info': {'plot': self._strip_tags(item['description'])},
-                    'images': {'thumb': item['course']['image_480x270']},
+        _title = None
+
+        for row in data:
+            if row['_class'] == 'chapter':
+                li = ListItem(label='~ [B]Section {}: {}[/B] ~'.format(row['object_index'], row['title']))
+                li.setInfo('video', {'plot': self._strip_tags(row['description'])})
+                li.setArt({'thumb': row['course']['image_480x270']})
+                items.append(li)
+                _title = row['course']['title']
+
+            elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
+                li = ListItem(label=row['title'], path=self._router.get(self.play, {'id': row['asset']['id']}))
+                li.setInfo('video', {
+                    'plot': self._strip_tags(row['description']), 
+                    'duration': row['asset']['length'], 
+                    'playcount': int(row['progress_status'] == 'started' and row['last_watched_second'] == 0)
                 })
-                print(item)
-                _title = item['course']['title']
-            elif item['_class'] == 'lecture' and item['is_published'] and item['asset']['asset_type'] in ('Video', 'Audio'):
-                items.append({
-                    'title': item['title'],
-                    'info': {'plot': self._strip_tags(item['description']), 'duration': item['asset']['length']},
-                    'images': {'thumb': item['thumbnail_url']},
-                    'url': self._router.get(self.play, {'id': item['asset']['id']}),
-                    'playable': True,
-                })
+
+                li.setArt({'thumb': row['thumbnail_url']})
+                li.setIsPlayable()
+                items.append(li)
 
         self._view.items(items, title=_title)
 
     def play(self, params):
         self._require_login()
 
-        use_ia_hls = self._addon.settings.getBool('use_ia_hls')
         data       = self._api.get_asset(params['id'])
         streams    = data.get('stream_urls', {}).get('Video') or stream_urls.get('Audio')
+        use_ia_hls = self._addon.settings.getBool('use_ia_hls')
 
         if not streams:
             raise ViewError('No streams found')
@@ -106,14 +108,12 @@ class Controller(BaseController):
 
         urls = sorted(urls, key=lambda x: (x[2] is True, x[2]), reverse=True)
         url, _type = urls[0][0:2]
-   
-        item = {
-            'url': url,
-            'vid_type': _type,
-            'options': {'use_ia_hls': use_ia_hls},
-        }
 
-        self._view.play(item)
+        li = ListItem(path=url)
+        if use_ia_hls and _type == 'hls':
+            li.setIaHLS()
+
+        self._view.play(li)
 
     def login(self, params):
         self._do_login()
