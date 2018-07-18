@@ -111,7 +111,7 @@ class Controller(BaseController):
 
         li = ListItem(path=url)
         if use_ia_hls and _type == 'hls':
-            li.setIaHLS()
+            li.ia_hls()
 
         self._view.play(li)
 
