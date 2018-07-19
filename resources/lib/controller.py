@@ -28,7 +28,7 @@ class Controller(BaseController):
 
         items.append(Item(label='Settings', art=True, path=self._router.get(self.settings)))
 
-        self._view.items(items)
+        self._view.items(items, cacheToDisc=False)
 
     def my_courses(self, params):
         self._require_login()
