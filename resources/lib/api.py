@@ -64,7 +64,7 @@ class API(object):
         }
         params = {'response_type': 'json'}
 
-        resp = self._session.post(config.LOGIN_URL, params=params, data=payload, obfuscate=['email', 'password'])
+        resp = self._session.post(config.LOGIN_URL, params=params, data=payload, log_kwargs=False)
         access_token = resp.cookies.get('access_token')
         if not access_token:
             self._addon.data.pop('access_token', None)
