@@ -18,7 +18,7 @@ class Controller(BaseController):
 
     def home(self, params):
         items = [
-            Item(label='My Courses', art=True, path=self._router.get(self.my_courses))
+            Item(label='My Courses', art=True, path=self._router.get(self.my_courses), is_folder=True)
         ]
 
         if not self._api.logged_in:
@@ -48,10 +48,11 @@ class Controller(BaseController):
             plot = '{}\n\n{} Lectures ({})\n{}% Complete'.format(self._strip_tags(course['headline'].encode('utf-8').strip()), course['num_published_lectures'], course['content_info'], course['completion_ratio'])
 
             item = Item(
-                label = course['title'],
-                path  = self._router.get(self.course, {'id': course['id']}),
-                art   = {'thumb': course['image_480x270']},
-                info  = {'plot': plot}
+                label     = course['title'],
+                path      = self._router.get(self.course, {'id': course['id']}),
+                art       = {'thumb': course['image_480x270']},
+                info      = {'plot': plot},
+                is_folder = True,
             )
             items.append(item)
 
@@ -101,12 +102,14 @@ class Controller(BaseController):
 
     def login(self, params):
         self._do_login()
+        self._view.refresh()
 
     def logout(self, params):
         if not self._view.dialog_yes_no("Are you sure you want to logout?"):
             raise InputError()
 
         self._api.logout()
+        self._view.refresh()
 
     def _do_login(self):
         username = self._view.get_input("Udemy Email", default=self._addon.data.get('username', '')).strip()
