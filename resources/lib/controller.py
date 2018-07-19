@@ -17,7 +17,6 @@ class Controller(BaseController):
         self._api = API(self._addon)
 
     def home(self, params):
-
         if not self._api.logged_in:
             items = [
                 Item(label='[B]Login[/B]', art=True, path=self._router.get(self.login)),
@@ -29,7 +28,7 @@ class Controller(BaseController):
             ]
 
         items.append(Item(label='Settings', art=True, path=self._router.get(self.settings)))
-        
+
         self._view.items(items)
 
     def my_courses(self, params):
