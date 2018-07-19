@@ -28,16 +28,17 @@ class Controller(BaseController):
 
         items.append(Item(label='Settings', art=True, path=self._router.get(self.settings)))
 
-        self._view.items(items, cache=False)
+        self._view.items(items)
 
     def my_courses(self, params):
         self._require_login()
 
-        func = lambda: self._api.my_courses()['results']
-        if self._addon.settings.getBool('use_cache'):
-            data = self._addon.cache.function('my_courses', func, expires=config.MY_COURSES_EXPIRY)
-        else:
-            data = func()
+        data = self._addon.cache.function(
+            key     = 'my_courses', 
+            func    = lambda: self._api.my_courses()['results'],
+            expires = config.MY_COURSES_EXPIRY, 
+            fresh   = not self._addon.settings.getBool('use_cache')
+        )
 
         items = []
         for course in data:
@@ -60,12 +61,12 @@ class Controller(BaseController):
     def course(self, params):
         self._require_login()
 
-        func = lambda: self._api.course_items(params['id'])['results']
-
-        if self._addon.settings.getBool('use_cache'):
-            data = self._addon.cache.function('course_{}'.format(params['id']), func, expires=config.COURSE_EXPIRY)
-        else:
-            data = func()
+        data = self._addon.cache.function(
+            key      = 'course_{}'.format(params['id']), 
+            func     = lambda: self._api.course_items(params['id'])['results'], 
+            expires  = config.COURSE_EXPIRY, 
+            fresh    = not self._addon.settings.getBool('use_cache')
+        )
 
         items = []
         _title = None

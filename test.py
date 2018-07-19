@@ -8,12 +8,12 @@ from resources.lib.controller import Controller
 
 ROUTES = [
     #'',
-    '?_route=home',
-    #'?_route=login',
-    '?_route=my_courses',
-    '?_route=course&id=1647296',
-    '?_route=play&id=12333336',
-    '?_route=logout',
+    #'?_route=home',
+    '?_route=login',
+    #'?_route=my_courses',
+ #   '?_route=course&id=1647296',
+  #  '?_route=play&id=12333336',
+   # '?_route=logout',
 ]
 
 run_test(Controller, ROUTES)
