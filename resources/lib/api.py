@@ -36,9 +36,9 @@ class API(object):
     def course_items(self, course_id):
         params = {
             'page_size'        : 9999,
-            'fields[course]'   : 'image_480x270,title',
+            'fields[course]'   : 'title,image_480x270',
             'fields[chapter]'  : 'description,object_index,title,course',
-            'fields[lecture]'  : 'title,object_index,description,is_published,created,thumbnail_url,progress_status,last_watched_second,asset',
+            'fields[lecture]'  : 'title,object_index,description,is_published,created,progress_status,last_watched_second,course,asset',
             'fields[asset]'    : 'asset_type,length,status',
             'fields[practice]' : 'id',
             'fields[quiz]'     : 'id',
@@ -48,7 +48,7 @@ class API(object):
 
     def get_asset(self, asset_id):
         params = {
-            'fields[asset]'   : '@min,status,stream_urls,thumbnail_url,length,course',
+            'fields[asset]'   : '@min,status,stream_urls,length,course',
         }
 
         return self._session.get(config.BASE_API.format('/assets/{0}'.format(asset_id)), params=params).json()

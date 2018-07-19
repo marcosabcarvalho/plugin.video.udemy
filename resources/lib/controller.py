@@ -30,10 +30,6 @@ class Controller(BaseController):
 
         self._view.items(items, cache=False)
 
-    def _require_login(self):
-        if not self._api.logged_in:
-            self._do_login()
-
     def my_courses(self, params):
         self._require_login()
 
@@ -87,22 +83,18 @@ class Controller(BaseController):
 
             elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
                 item = Item(
-                    label    = row['title'], path=self._router.get(self.play, {'id': row['asset']['id']}),
-                    playable = True,
-                    art      = {'thumb': row['thumbnail_url']},
-                    info     = {
+                    label = row['title'], path=self._router.get(self.play, {'id': row['asset']['id']}),
+                    art   = {'thumb': row['course']['image_480x270']},
+                    info  = {
                         'plot': self._strip_tags(row['description']), 
-                        'duration': row['asset']['length'], 
-                        'playcount': int(row['progress_status'] == 'started' and row['last_watched_second'] == 0)
-                    }
+                        'duration': row['asset']['length'],
+                        'playcount': int(row['progress_status'] == 'started' and row['last_watched_second'] == 0),
+                    },
+                    playable = True,
                 )
                 items.append(item)
 
         self._view.items(items, title=_title)
-
-    def login(self, params):
-        self._do_login()
-        self._view.refresh()
 
     def logout(self, params):
         if not self._view.dialog_yes_no("Are you sure you want to logout?"):
@@ -110,6 +102,14 @@ class Controller(BaseController):
 
         self._api.logout()
         self._view.refresh()
+        
+    def login(self, params):
+        self._do_login()
+        self._view.refresh()
+
+    def _require_login(self):
+        if not self._api.logged_in:
+            self._do_login()
 
     def _do_login(self):
         username = self._view.get_input("Udemy Email", default=self._addon.data.get('username', '')).strip()
