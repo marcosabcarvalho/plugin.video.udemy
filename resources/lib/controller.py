@@ -17,18 +17,20 @@ class Controller(BaseController):
         self._api = API(self._addon)
 
     def home(self, params):
-        items = [
-            Item(label='My Courses', art=True, path=self._router.get(self.my_courses), is_folder=True)
-        ]
 
         if not self._api.logged_in:
-            items.append(Item(label='[B]Login[/B]', art=True, path=self._router.get(self.login)))
+            items = [
+                Item(label='[B]Login[/B]', art=True, path=self._router.get(self.login)),
+            ]
         else:
-            items.append(Item(label='Logout', art=True, path=self._router.get(self.logout)))
+            items = [
+                Item(label='My Courses', art=True, path=self._router.get(self.my_courses), is_folder=True),
+                Item(label='Logout', art=True, path=self._router.get(self.logout)),
+            ]
 
         items.append(Item(label='Settings', art=True, path=self._router.get(self.settings)))
-
-        self._view.items(items, cacheToDisc=False)
+        
+        self._view.items(items)
 
     def my_courses(self, params):
         self._require_login()
@@ -105,14 +107,6 @@ class Controller(BaseController):
         self._view.refresh()
         
     def login(self, params):
-        self._do_login()
-        self._view.refresh()
-
-    def _require_login(self):
-        if not self._api.logged_in:
-            self._do_login()
-
-    def _do_login(self):
         username = self._view.get_input("Udemy Email", default=self._addon.data.get('username', '')).strip()
         if not username:
             raise InputError()
@@ -123,6 +117,11 @@ class Controller(BaseController):
 
         self._addon.data['username'] = username
         self._api.login(username=username, password=password)
+        self._view.refresh()
+
+    def _require_login(self):
+        if not self._api.logged_in:
+            raise ViewError('Please login first')
 
     def play(self, params):
         self._require_login()
