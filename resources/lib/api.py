@@ -1,39 +1,37 @@
-from matthuisman.logger import log
+from matthuisman import userdata
 from matthuisman.session import Session
-from matthuisman.exceptions import LoginError
+from matthuisman.log import log
 
-from . import config
+from .constants import HEADERS, API_URL
 
 class API(object):
-    def __init__(self, addon):
-        self._addon = addon
+    def __init__(self):
+        self.new_session()
 
-        self._session = Session()
-        self._session.headers.update(config.HEADERS)
+    def new_session(self):
+        self.logged_in = False
+        self._session = Session(HEADERS, base_url=API_URL)
+        self.set_access_token(userdata.get('access_token'))
 
-        access_token = self._addon.data.get('access_token')
-        if access_token:
-            self._set_auth(access_token)
-
-        self._logged_in = access_token != None
-
-    def _set_auth(self, access_token):
-        self._session.headers.update({'Authorization': 'Bearer {0}'.format(access_token)})
-
-    @property
-    def logged_in(self):
-        return self._logged_in
+    def set_access_token(self, token):
+        if token:
+            self._session.headers.update({'Authorization': 'Bearer {0}'.format(token)})
+            self.logged_in = True
 
     def my_courses(self):
+        log('API: My Courses')
+
         params = {
             'page_size'       : 9999,
             'ordering'        : '-access_time,-enrolled',
             'fields[course]'  : 'id,title,image_480x270,image_750x422,headline,num_published_lectures,content_info,completion_ratio',
         }
 
-        return self._session.get(config.BASE_API.format('/users/me/subscribed-courses'), params=params).json()
+        return self._session.get('users/me/subscribed-courses', params=params).json()['results']
 
     def course_items(self, course_id):
+        log('API: Course Items')
+
         params = {
             'page_size'        : 9999,
             'fields[course]'   : 'title,image_480x270',
@@ -44,38 +42,39 @@ class API(object):
             'fields[quiz]'     : 'id',
         }
 
-        return self._session.get(config.BASE_API.format('/courses/{}/cached-subscriber-curriculum-items'.format(course_id)), params=params).json()
+        return self._session.get('courses/{}/cached-subscriber-curriculum-items'.format(course_id), params=params).json()['results']
 
-    def get_asset(self, asset_id):
+    def get_stream_urls(self, asset_id):
         params = {
             'fields[asset]'   : '@min,status,stream_urls,length,course',
         }
 
-        return self._session.get(config.BASE_API.format('/assets/{0}'.format(asset_id)), params=params).json()
+        return self._session.get('assets/{0}'.format(asset_id), params=params).json().get('stream_urls', {})
 
     def login(self, username, password):
-        resp = self._session.get(config.LOGIN_URL)
+        log('API: Login')
 
-        payload = {
+        data = {
             "email": username,
-            "password": password,
-            "csrfmiddlewaretoken": resp.cookies.get('csrftoken'),
-            'locale': 'en_US',
+            "password": password
         }
-        params = {'response_type': 'json'}
 
-        resp = self._session.post(config.LOGIN_URL, params=params, data=payload, log_kwargs=False)
-        access_token = resp.cookies.get('access_token')
+        params = {
+            'fields[user]': 'title,image_100x100,name,access_token',
+        }
+
+        data = self._session.post('auth/udemy-auth/login/', params=params, data=data).json()
+        access_token = data.get('access_token')
+        
         if not access_token:
-            self._addon.data.pop('access_token', None)
-            self._logged_in = False
-            raise LoginError("Failed to login. Check your details are correct and try again.")
+            self.logout()
+            error = data.get('detail', '')
+            raise Exception(error)
 
-        self._set_auth(access_token)
-        self._addon.data['access_token'] = access_token
-        self._logged_in = True
+        userdata.set('access_token', access_token)
+        self.set_access_token(access_token)
 
     def logout(self):
-        self._session.headers.clear()
-        self._addon.data['access_token'] = None
-        self._logged_in = False
+        log('API: Logout')
+        userdata.delete('access_token')
+        self.new_session()
