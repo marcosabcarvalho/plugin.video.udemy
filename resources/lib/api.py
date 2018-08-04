@@ -5,9 +5,6 @@ from matthuisman.log import log
 from .constants import HEADERS, API_URL
 
 class API(object):
-    def __init__(self):
-        self.new_session()
-
     def new_session(self):
         self.logged_in = False
         self._session = Session(HEADERS, base_url=API_URL)

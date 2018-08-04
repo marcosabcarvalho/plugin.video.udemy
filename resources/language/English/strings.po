@@ -94,7 +94,6 @@ msgstr ""
 msgctxt "#30008"
 msgid "{title}\n\n"
 "{num_lectures} Lectures ({length})"
-#\n"{percent_complete}% Complete"
 msgstr ""
 
 msgctxt "#30009"

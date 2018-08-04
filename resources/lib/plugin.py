@@ -8,7 +8,7 @@ from matthuisman.util import get_addon_string as _
 from .api import API
 from .constants import MY_COURSES_EXPIRY, COURSE_EXPIRY
 
-L_HOME             = 30000
+L_LOGIN            = 30000
 L_MY_COURSES       = 30001
 L_LOGOUT           = 30002
 L_SETTINGS         = 30003
@@ -33,14 +33,14 @@ api = API()
 def before_dispatch():
     api.new_session()
     plugin.logged_in = api.logged_in
-    cache.enabled    = settings.getBool('use_cache')
+    cache.enabled    = settings.getBool('use_cache', True)
 
 @plugin.route('')
 def home():
     folder = plugin.Folder()
 
     if not api.logged_in:
-        folder.add_item(label=_(L_HOME), route=plugin.Route(login))
+        folder.add_item(label=_(L_LOGIN), route=plugin.Route(login))
     else:
         folder.add_item(label=_(L_MY_COURSES), route=plugin.Route(my_courses))
         folder.add_item(label=_(L_LOGOUT), route=plugin.Route(logout))
@@ -49,7 +49,7 @@ def home():
 
     return folder
 
-@plugin.route('login')
+@plugin.route()
 def login():
     while not api.logged_in:
         username = gui.input(_(L_ASK_USERNAME), default=userdata.get('username', '')).strip()
@@ -71,14 +71,15 @@ def login():
 
     cache.delete('password')
 
-@plugin.route('logout')
+@plugin.route()
 def logout():
     if not gui.yes_no(_(L_LOGOUT_YES_NO)):
         return
 
     api.logout()
 
-@plugin.route('my_courses', login_required=True)
+@plugin.route()
+@plugin.login_required()
 @cache.cached(MY_COURSES_EXPIRY)
 def my_courses():
     folder = plugin.Folder(title=_(L_MY_COURSES))
@@ -101,7 +102,8 @@ def my_courses():
 
     return folder
 
-@plugin.route('course', login_required=True)
+@plugin.route()
+@plugin.login_required()
 @cache.cached(COURSE_EXPIRY)
 def course(course_id):
     folder = plugin.Folder()
@@ -133,7 +135,8 @@ def course(course_id):
 
     return folder
 
-@plugin.route('play', login_required=True)
+@plugin.route()
+@plugin.login_required()
 def play(asset_id):
     use_ia_hls  = settings.getBool('use_ia_hls')
     quality     = int(settings.get('max_quality').strip('p'))
