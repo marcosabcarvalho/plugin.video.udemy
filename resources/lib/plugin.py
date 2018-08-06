@@ -40,12 +40,12 @@ def home():
     folder = plugin.Folder()
 
     if not api.logged_in:
-        folder.add_item(label=_(L_LOGIN), route=plugin.Route(login))
+        folder.add_item(label=_(L_LOGIN), path=plugin.url_for(login))
     else:
-        folder.add_item(label=_(L_MY_COURSES), route=plugin.Route(my_courses))
-        folder.add_item(label=_(L_LOGOUT), route=plugin.Route(logout))
+        folder.add_item(label=_(L_MY_COURSES), path=plugin.url_for(my_courses), cache_key=cache.key_for(my_courses))
+        folder.add_item(label=_(L_LOGOUT), path=plugin.url_for(logout))
 
-    folder.add_item(label=_(L_SETTINGS), route=plugin.Route(plugin._settings))
+    folder.add_item(label=_(L_SETTINGS), path=plugin.url_for(plugin.ROUTE_SETTINGS))
 
     return folder
 
@@ -94,7 +94,8 @@ def my_courses():
 
         folder.add_item(
             label     = row['title'],
-            route     = plugin.Route(course, course_id=row['id']),
+            path      = plugin.url_for(course, course_id=row['id']),
+            cache_key = cache.key_for(course, course_id=row['id']),
             art       = {'thumb': row['image_480x270']},
             info      = {'plot': plot},
             is_folder = True,
@@ -122,7 +123,7 @@ def course(course_id):
         elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
             folder.add_item(
                 label = row['title'], 
-                route = plugin.Route(play, asset_id=row['asset']['id']),
+                route = plugin.url_for(play, asset_id=row['asset']['id']),
                 art   = {'thumb': row['course']['image_480x270']},
                 info  = {
                     'plot':      strip_tags(row['description']), 
