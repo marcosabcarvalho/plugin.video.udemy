@@ -4,6 +4,7 @@ from HTMLParser import HTMLParser
 
 from matthuisman import plugin, gui, cache, settings, userdata, inputstream
 from matthuisman.util import get_string as _
+from matthuisman.log import log
 
 from .api import API
 from .constants import MY_COURSES_EXPIRY, COURSE_EXPIRY
@@ -22,6 +23,9 @@ L_NO_STREAM_ERROR  = 30010
 
 h = HTMLParser()
 def strip_tags(text):
+    if not text:
+        return ''
+
     text = re.sub('\([^\)]*\)', '', text)
     text = re.sub('<[^>]*>', '', text)
     text = h.unescape(text)
@@ -152,9 +156,12 @@ def play(asset_id):
         elif use_ia_hls:
             return plugin.PlayerItem(inputstream=inputstream.HLS(), path=item['file'])
     
+    if not urls:
+        raise plugin.Error(_(L_NO_STREAM_ERROR))
+
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
     for url in urls:
         if url[1] <= quality:
             return plugin.PlayerItem(path=url[0])
 
-    raise plugin.Error(_(L_NO_STREAM_ERROR))
+    return plugin.PlayerItem(path=urls[-1][0])
