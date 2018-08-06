@@ -16,6 +16,39 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+# matthuisman common
+msgctxt "#32000"
+msgid "You need to login to access this content"
+msgstr ""
+
+msgctxt "#32001"
+msgid "No default route found"
+msgstr ""
+
+msgctxt "#32002"
+msgid "Are you sure you want to reset this plugins data?"
+msgstr ""
+
+msgctxt "#32003"
+msgid "Reset OK"
+msgstr ""
+
+msgctxt "#32004"
+msgid "Removed {delete_count} Cached Item"
+msgstr ""
+
+msgctxt "#32005"
+msgid "Clear Cache"
+msgstr ""
+
+msgctxt "#32006"
+msgid "Could not find a function for url: {raw_url} => {parsed_url}"
+msgstr ""
+
+msgctxt "#32007"
+msgid "Could not find a url for function: {function_name}"
+msgstr ""
+
 # settings.xml
 msgctxt "#31000"
 msgid "Max Quality"
@@ -55,39 +88,6 @@ msgstr ""
 
 msgctxt "#31009"
 msgid "Inputstream Settings"
-msgstr ""
-
-# matthuisman common
-msgctxt "#32000"
-msgid "You need to login to access this content"
-msgstr ""
-
-msgctxt "#32001"
-msgid "No default route found"
-msgstr ""
-
-msgctxt "#32002"
-msgid "Are you sure you want to reset this plugins data?"
-msgstr ""
-
-msgctxt "#32003"
-msgid "Reset OK"
-msgstr ""
-
-msgctxt "#32004"
-msgid "Removed {delete_count} Cached Item"
-msgstr ""
-
-msgctxt "#32005"
-msgid "Clear Cache"
-msgstr ""
-
-msgctxt "#32006"
-msgid "Could not find a function for url: {raw_url} => {parsed_url}"
-msgstr ""
-
-msgctxt "#32007"
-msgid "Could not find a url for function: {function_name}"
 msgstr ""
 
 # plugin.py
