@@ -3,7 +3,7 @@ import re
 from HTMLParser import HTMLParser
 
 from matthuisman import plugin, gui, cache, settings, userdata, inputstream
-from matthuisman.util import get_addon_string as _
+from matthuisman.util import get_string as _
 
 from .api import API
 from .constants import MY_COURSES_EXPIRY, COURSE_EXPIRY
@@ -123,7 +123,7 @@ def course(course_id):
         elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
             folder.add_item(
                 label = row['title'], 
-                route = plugin.url_for(play, asset_id=row['asset']['id']),
+                path = plugin.url_for(play, asset_id=row['asset']['id']),
                 art   = {'thumb': row['course']['image_480x270']},
                 info  = {
                     'plot':      strip_tags(row['description']), 
@@ -147,10 +147,10 @@ def play(asset_id):
 
     urls = []
     for item in streams:
-        if item['type'] == 'application/x-mpegURL' and use_ia_hls:
+        if item['type'] != 'application/x-mpegURL':
+            urls.append([item['file'], int(item['label'])])
+        elif use_ia_hls:
             return plugin.PlayerItem(inputstream=inputstream.HLS(), path=item['file'])
-
-        urls.append([item['file'], int(item['label'])])
     
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
     for url in urls:
