@@ -163,7 +163,7 @@ def play(asset_id):
         if item['type'] != 'application/x-mpegURL':
             urls.append([item['file'], int(item['label'])])
         elif use_ia_hls:
-            return plugin.Item(inputstream=inputstream.HLS(), path=item['file'])
+            return plugin.Item(inputstream=inputstream.HLS(), path=item['file'], art=False)
     
     if not urls:
         raise plugin.Error(_(L_NO_STREAM_ERROR))
@@ -171,6 +171,6 @@ def play(asset_id):
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
     for url in urls:
         if url[1] <= quality:
-            return plugin.Item(path=url[0])
+            return plugin.Item(path=url[0], art=False)
 
-    return plugin.Item(path=urls[-1][0])
+    return plugin.Item(path=urls[-1][0], art=False)
