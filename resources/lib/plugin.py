@@ -138,10 +138,11 @@ def course(course_id):
                 path = plugin.url_for(play, asset_id=row['asset']['id']),
                 art   = {'thumb': row['course']['image_480x270']},
                 info  = {
+                    'title':     row['title'],
                     'plot':      strip_tags(row['description']), 
                     'duration':  row['asset']['length'],
-                    'playcount': int(row['progress_status'] == 'started' and row['last_watched_second'] == 0),
                     'mediatype': 'episode',
+                    'tvshowtitle': row['course']['title'],
                 },
                 playable = True,
             )
