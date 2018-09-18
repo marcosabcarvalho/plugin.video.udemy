@@ -20,6 +20,7 @@ L_LOGOUT_YES_NO    = 30007
 L_COURSE_INFO      = 30008
 L_SECTION_LABEL    = 30009
 L_NO_STREAM_ERROR  = 30010
+L_NO_COURSES       = 30011
 
 h = HTMLParser()
 def strip_tags(text):
@@ -37,16 +38,15 @@ api = API()
 def before_dispatch():
     api.new_session()
     plugin.logged_in = api.logged_in
-    cache.enabled    = settings.getBool('use_cache', True)
 
 @plugin.route('')
 def home():
     folder = plugin.Folder()
 
     if not api.logged_in:
-        folder.add_item(label=_(L_LOGIN), path=plugin.url_for(login))
+        folder.add_item(label=_(L_LOGIN, bold=True), path=plugin.url_for(login))
     else:
-        folder.add_item(label=_(L_MY_COURSES), path=plugin.url_for(my_courses), cache_key=cache.key_for(my_courses))
+        folder.add_item(label=_(L_MY_COURSES, bold=True), path=plugin.url_for(my_courses), cache_key=cache.key_for(my_courses))
         folder.add_item(label=_(L_LOGOUT), path=plugin.url_for(logout))
 
     folder.add_item(label=_(L_SETTINGS), path=plugin.url_for(plugin.ROUTE_SETTINGS))
@@ -74,6 +74,7 @@ def login():
             gui.ok(_(L_LOGIN_ERROR, error_msg=e))
 
     cache.delete('password')
+    gui.refresh()
 
 @plugin.route()
 def logout():
@@ -81,6 +82,7 @@ def logout():
         return
 
     api.logout()
+    gui.refresh()
 
 @plugin.route()
 @plugin.login_required()
@@ -103,6 +105,12 @@ def my_courses():
             art       = {'thumb': row['image_480x270']},
             info      = {'plot': plot},
             is_folder = True,
+        )
+
+    if not folder.items:
+        folder.add_item(
+            label = _(L_NO_COURSES, label=True),
+            is_folder = False,
         )
 
     return folder
@@ -154,7 +162,7 @@ def play(asset_id):
         if item['type'] != 'application/x-mpegURL':
             urls.append([item['file'], int(item['label'])])
         elif use_ia_hls:
-            return plugin.PlayerItem(inputstream=inputstream.HLS(), path=item['file'])
+            return plugin.Item(inputstream=inputstream.HLS(), path=item['file'])
     
     if not urls:
         raise plugin.Error(_(L_NO_STREAM_ERROR))
@@ -162,6 +170,6 @@ def play(asset_id):
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
     for url in urls:
         if url[1] <= quality:
-            return plugin.PlayerItem(path=url[0])
+            return plugin.Item(path=url[0])
 
-    return plugin.PlayerItem(path=urls[-1][0])
+    return plugin.Item(path=urls[-1][0])

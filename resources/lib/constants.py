@@ -3,7 +3,7 @@ HEADERS = {
     'Authorization': 'Basic YWQxMmVjYTljYmUxN2FmYWM2MjU5ZmU1ZDk4NDcxYTY6YTdjNjMwNjQ2MzA4ODI0YjIzMDFmZGI2MGVjZmQ4YTA5NDdlODJkNQ==',
 }
 
-API_URL   = 'https://www.udemy.com/api-2.0/{}'
+API_URL   = 'https://{}.udemy.com/api-2.0/{{}}'
 
 MY_COURSES_EXPIRY = (60*30)   #30 Minutes
 COURSE_EXPIRY     = (60*60*24) #24 Hours

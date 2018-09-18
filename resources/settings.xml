@@ -3,11 +3,15 @@
     <setting id="_fresh" type="bool" visible="false" default="true" />
 
     <setting label="31000" id="max_quality" type="labelenum" default="1080p" lvalues="31001|31002|31003|31004|31005" />
+    <setting label="31006" type="bool" id="business_account" default="false"/>
+    <setting label="31007" type="text" id="business_name" default="" enable="eq(-1,true)"/>
 
-    <setting label="31007" type="bool" id="use_cache" default="true"/>
-    <setting label="31006" type="bool" id="use_ia_hls" default="true"/>
+    <setting label="32017" type="bool" id="use_cache" default="true"/>
 
     <setting type="sep"/>
-    <setting label="31009" type="action" option="close" id="open_ia_settings" action="RunPlugin(plugin://$ID/?_=_ia_settings)" enable="eq(-2,true)"/>
-    <setting label="31008" type="action" action="RunPlugin(plugin://$ID/?_=_reset)"/>
+    <setting label="32023" type="bool" id="use_ia_hls" default="true"/>
+    <setting label="32018" type="action" action="RunPlugin(plugin://$ID/?_=_ia_settings)" option="close"/>
+    <!-- <setting label="32021" type="action" action="RunPlugin(plugin://$ID/?_=_ia_install)"/> -->
+    <setting type="sep"/>
+    <setting label="32019" type="action" action="RunPlugin(plugin://$ID/?_=_reset)"/>
 </settings>

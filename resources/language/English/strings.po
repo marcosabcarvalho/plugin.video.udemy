@@ -4,19 +4,21 @@
 # Addon Provider: Matt Huisman
 msgid ""
 msgstr ""
-"Project-Id-Version: XBMC Addons\n"
-"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
+"Project-Id-Version:\n"
+"Report-Msgid-Bugs-To:\n"
 "POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: XBMC Translation Team\n"
-"Language-Team: English (http://www.transifex.com/projects/p/xbmc-addons/language/en/)\n"
+"Last-Translator:matthuisman\n"
+"Language-Team:\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-# matthuisman common
+### [COMMON] ###
+
+
 msgctxt "#32000"
 msgid "You need to login to access this content"
 msgstr ""
@@ -26,11 +28,11 @@ msgid "No default route found"
 msgstr ""
 
 msgctxt "#32002"
-msgid "Are you sure you want to reset this plugins data?"
+msgid "Are you sure you want to clear this plugins data?"
 msgstr ""
 
 msgctxt "#32003"
-msgid "Reset OK"
+msgid "Clear Data OK"
 msgstr ""
 
 msgctxt "#32004"
@@ -49,7 +51,80 @@ msgctxt "#32007"
 msgid "Could not find a url for function: {function_name}"
 msgstr ""
 
-# settings.xml
+msgctxt "#32008"
+msgid "Inpustream Adaptive add-on required for Widevine playback\n"
+"Use the Kodi installer from the Kodi website instead"
+msgstr ""
+
+msgctxt "#32009"
+msgid "Kodi Windows Store (UWP) version does not support Widevine DRM playback.\n"
+"Use the Kodi installer for Windows from the Kodi website instead."
+msgstr ""
+
+msgctxt "#32010"
+msgid "Kodi 18 or higher required for Widevine DRM playback on {system}"
+msgstr ""
+
+msgctxt "#32011"
+msgid "ARM 64bit does not support Widevine DRM playback\n"
+"An OS with a 32-bit userspace is required.\n"
+"Try coreelec.org"
+msgstr ""
+
+msgctxt "#32012"
+msgid "This system ({system}{arch} Kodi v{kodi_version}) does not yet support Widevine Playback"
+msgstr ""
+
+msgctxt "#32013"
+msgid "Kodi 17 or higher required for Widevine DRM playback."
+msgstr ""
+
+msgctxt "#32014"
+msgid "Downloading required file\n"
+"{url}"
+msgstr ""
+
+msgctxt "#32015"
+msgid "Widevine DRM"
+msgstr ""
+
+msgctxt "#32016"
+msgid "There was an unexpected error installing Widevine\n"
+"Please restart KODI and try again"
+msgstr ""
+
+msgctxt "#32017"
+msgid "Use Cache"
+msgstr ""
+
+msgctxt "#32018"
+msgid "Inputstream Settings"
+msgstr ""
+
+msgctxt "#32019"
+msgid "Clear Data"
+msgstr ""
+
+msgctxt "#32020"
+msgid "Error"
+msgstr ""
+
+msgctxt "#32021"
+msgid "Install Widevine DRM"
+msgstr ""
+
+msgctxt "#32022"
+msgid "Widevine DRM Installed OK\n"
+"If videos do not play, please restart KODI and try again"
+msgstr ""
+
+msgctxt "#32023"
+msgid "Use Inputstream HLS"
+msgstr ""
+
+
+### [SETTINGS] ###
+
 msgctxt "#31000"
 msgid "Max Quality"
 msgstr ""
@@ -75,28 +150,21 @@ msgid "1080p"
 msgstr ""
 
 msgctxt "#31006"
-msgid "Use Inputstream HLS"
+msgid "Udemy Business Account"
 msgstr ""
 
 msgctxt "#31007"
-msgid "Use Cache"
+msgid "Organization Account Name"
 msgstr ""
 
-msgctxt "#31008"
-msgid "Reset Data"
-msgstr ""
+### [PLUGIN] ###
 
-msgctxt "#31009"
-msgid "Inputstream Settings"
-msgstr ""
-
-# plugin.py
 msgctxt "#30000"
-msgid "[B]Login[/B]"
+msgid "Login"
 msgstr ""
 
 msgctxt "#30001"
-msgid "[B]My Courses[/B]"
+msgid "My Courses"
 msgstr ""
 
 msgctxt "#30002"
@@ -135,4 +203,8 @@ msgstr ""
 
 msgctxt "#30010"
 msgid "No stream found"
+msgstr ""
+
+msgctxt "#30011"
+msgid "No Courses"
 msgstr ""

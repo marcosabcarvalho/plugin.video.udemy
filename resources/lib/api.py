@@ -1,4 +1,4 @@
-from matthuisman import userdata
+from matthuisman import userdata, settings, cache
 from matthuisman.session import Session
 from matthuisman.log import log
 
@@ -7,7 +7,19 @@ from .constants import HEADERS, API_URL
 class API(object):
     def new_session(self):
         self.logged_in = False
-        self._session = Session(HEADERS, base_url=API_URL)
+
+        sub_domain = settings.get('business_name') if settings.getBool('business_account', False) else ''
+        if not sub_domain:
+            sub_domain = 'www'
+
+        if sub_domain != userdata.get('sub_domain', 'www'):
+            userdata.delete('access_token')
+            cache.empty()
+            userdata.set('sub_domain', sub_domain)
+
+        base_url = API_URL.format(sub_domain)
+
+        self._session = Session(HEADERS, base_url=base_url)
         self.set_access_token(userdata.get('access_token'))
 
     def set_access_token(self, token):
@@ -74,4 +86,5 @@ class API(object):
     def logout(self):
         log('API: Logout')
         userdata.delete('access_token')
+        cache.empty()
         self.new_session()
