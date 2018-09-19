@@ -2,9 +2,9 @@
 <settings>
     <setting id="_fresh" type="bool" visible="false" default="true" />
 
-    <setting label="31000" id="max_quality" type="labelenum" default="1080p" lvalues="31001|31002|31003|31004|31005" />
-    <setting label="31006" type="bool" id="business_account" default="false"/>
-    <setting label="31007" type="text" id="business_name" default="" enable="eq(-1,true)"/>
+    <setting label="30012" id="max_quality" type="labelenum" default="1080p" lvalues="30013|30014|30015|30016|30017" />
+    <setting label="30018" type="bool" id="business_account" default="false"/>
+    <setting label="30019" type="text" id="business_name" default="" enable="eq(-1,true)"/>
 
     <setting label="32017" type="bool" id="use_cache" default="true"/>
 

@@ -123,40 +123,6 @@ msgid "Use Inputstream HLS"
 msgstr ""
 
 
-### [SETTINGS] ###
-
-msgctxt "#31000"
-msgid "Max Quality"
-msgstr ""
-
-msgctxt "#31001"
-msgid "144p"
-msgstr ""
-
-msgctxt "#31002"
-msgid "360p"
-msgstr ""
-
-msgctxt "#31003"
-msgid "480p"
-msgstr ""
-
-msgctxt "#31004"
-msgid "720p"
-msgstr ""
-
-msgctxt "#31005"
-msgid "1080p"
-msgstr ""
-
-msgctxt "#31006"
-msgid "Udemy Business Account"
-msgstr ""
-
-msgctxt "#31007"
-msgid "Organization Account Name"
-msgstr ""
-
 ### [PLUGIN] ###
 
 msgctxt "#30000"
@@ -207,4 +173,38 @@ msgstr ""
 
 msgctxt "#30011"
 msgid "No Courses"
+msgstr ""
+
+### [SETTINGS] ###
+
+msgctxt "#30012"
+msgid "Max Quality"
+msgstr ""
+
+msgctxt "#30013"
+msgid "144p"
+msgstr ""
+
+msgctxt "#30014"
+msgid "360p"
+msgstr ""
+
+msgctxt "#30015"
+msgid "480p"
+msgstr ""
+
+msgctxt "#30016"
+msgid "720p"
+msgstr ""
+
+msgctxt "#30017"
+msgid "1080p"
+msgstr ""
+
+msgctxt "#30018"
+msgid "Udemy Business Account"
+msgstr ""
+
+msgctxt "#30019"
+msgid "Organization Account Name"
 msgstr ""
