@@ -5,5 +5,5 @@ HEADERS = {
 
 API_URL   = 'https://{}.udemy.com/api-2.0/{{}}'
 
-MY_COURSES_EXPIRY = (60*30)   #30 Minutes
-COURSE_EXPIRY     = (60*60*24) #24 Hours
+MY_COURSES_EXPIRY = (60*60*48) #48 Hours
+COURSE_EXPIRY     = (60*60*6)  #6 Hours

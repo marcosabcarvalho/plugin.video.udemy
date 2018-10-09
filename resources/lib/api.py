@@ -76,7 +76,6 @@ class API(object):
         access_token = data.get('access_token')
         
         if not access_token:
-            self.logout()
             error = data.get('detail', '')
             raise Exception(error)
 

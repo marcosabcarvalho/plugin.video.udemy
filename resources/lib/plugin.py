@@ -2,25 +2,12 @@ import re
 
 from HTMLParser import HTMLParser
 
-from matthuisman import plugin, gui, cache, settings, userdata, inputstream
-from matthuisman.util import get_string as _
+from matthuisman import plugin, gui, cache, settings, userdata, inputstream, signals
 from matthuisman.log import log
 
 from .api import API
 from .constants import MY_COURSES_EXPIRY, COURSE_EXPIRY
-
-L_LOGIN            = 30000
-L_MY_COURSES       = 30001
-L_LOGOUT           = 30002
-L_SETTINGS         = 30003
-L_ASK_USERNAME     = 30004
-L_ASK_PASSWORD     = 30005
-L_LOGIN_ERROR      = 30006
-L_LOGOUT_YES_NO    = 30007
-L_COURSE_INFO      = 30008
-L_SECTION_LABEL    = 30009
-L_NO_STREAM_ERROR  = 30010
-L_NO_COURSES       = 30011
+from .language import _
 
 h = HTMLParser()
 def strip_tags(text):
@@ -34,7 +21,7 @@ def strip_tags(text):
 
 api = API()
 
-@plugin.before_dispatch()
+@signals.on(signals.BEFORE_DISPATCH)
 def before_dispatch():
     api.new_session()
     plugin.logged_in = api.logged_in
@@ -44,25 +31,25 @@ def home():
     folder = plugin.Folder()
 
     if not api.logged_in:
-        folder.add_item(label=_(L_LOGIN, bold=True), path=plugin.url_for(login))
+        folder.add_item(label=_(_.LOGIN, _bold=True), path=plugin.url_for(login))
     else:
-        folder.add_item(label=_(L_MY_COURSES, bold=True), path=plugin.url_for(my_courses), cache_key=cache.key_for(my_courses))
-        folder.add_item(label=_(L_LOGOUT), path=plugin.url_for(logout))
+        folder.add_item(label=_(_.MY_COURSES, _bold=True), path=plugin.url_for(my_courses), cache_key=cache.key_for(my_courses))
+        folder.add_item(label=_.LOGOUT, path=plugin.url_for(logout))
 
-    folder.add_item(label=_(L_SETTINGS), path=plugin.url_for(plugin.ROUTE_SETTINGS))
+    folder.add_item(label=_.SETTINGS, path=plugin.url_for(plugin.ROUTE_SETTINGS))
 
     return folder
 
 @plugin.route()
 def login():
     while not api.logged_in:
-        username = gui.input(_(L_ASK_USERNAME), default=userdata.get('username', '')).strip()
+        username = gui.input(_.ASK_USERNAME, default=userdata.get('username', '')).strip()
         if not username:
             break
 
         userdata.set('username', username)
 
-        password = gui.input(_(L_ASK_PASSWORD), default=cache.get('password', '')).strip()
+        password = gui.input(_.ASK_PASSWORD, default=cache.get('password', '')).strip()
         if not password:
             break
 
@@ -71,16 +58,17 @@ def login():
         try:
             api.login(username=username, password=password)
         except Exception as e:
-            gui.ok(_(L_LOGIN_ERROR, error_msg=e))
+            gui.ok(_(_.LOGIN_ERROR, error_msg=e))
 
     cache.delete('password')
     gui.refresh()
 
 @plugin.route()
 def logout():
-    if not gui.yes_no(_(L_LOGOUT_YES_NO)):
+    if not gui.yes_no(_.LOGOUT_YES_NO):
         return
 
+    cache.empty()
     api.logout()
     gui.refresh()
 
@@ -88,10 +76,10 @@ def logout():
 @plugin.login_required()
 @cache.cached(MY_COURSES_EXPIRY)
 def my_courses():
-    folder = plugin.Folder(title=_(L_MY_COURSES))
+    folder = plugin.Folder(title=_.MY_COURSES)
 
     for row in api.my_courses():
-        plot = _(L_COURSE_INFO, 
+        plot = _(_.COURSE_INFO, 
             title            = row['headline'], 
             num_lectures     = row['num_published_lectures'], 
             percent_complete = row['completion_ratio'],
@@ -109,7 +97,7 @@ def my_courses():
 
     if not folder.items:
         folder.add_item(
-            label = _(L_NO_COURSES, label=True),
+            label = _(_.NO_COURSES, _label=True),
             is_folder = False,
         )
 
@@ -126,7 +114,7 @@ def course(course_id):
             folder.title = row['course']['title']
 
             folder.add_item(
-                label = _(L_SECTION_LABEL, section_number=row['object_index'], section_title=row['title']),
+                label = _(_.SECTION_LABEL, section_number=row['object_index'], section_title=row['title']),
                 art   = {'thumb': row['course']['image_480x270']},
                 info  = {'plot':  strip_tags(row['description'])},
                 is_folder = False,
@@ -135,13 +123,13 @@ def course(course_id):
         elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
             folder.add_item(
                 label = row['title'], 
-                path = plugin.url_for(play, asset_id=row['asset']['id']),
+                path  = plugin.url_for(play, asset_id=row['asset']['id']),
                 art   = {'thumb': row['course']['image_480x270']},
                 info  = {
-                    'title':     row['title'],
-                    'plot':      strip_tags(row['description']), 
-                    'duration':  row['asset']['length'],
-                    'mediatype': 'episode',
+                    'title':      row['title'],
+                    'plot':       strip_tags(row['description']), 
+                    'duration':   row['asset']['length'],
+                    'mediatype':  'episode',
                     'tvshowtitle': row['course']['title'],
                 },
                 playable = True,
@@ -166,7 +154,7 @@ def play(asset_id):
             return plugin.Item(inputstream=inputstream.HLS(), path=item['file'], art=False)
     
     if not urls:
-        raise plugin.Error(_(L_NO_STREAM_ERROR))
+        raise plugin.Error(_.NO_STREAM_ERROR)
 
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
     for url in urls:

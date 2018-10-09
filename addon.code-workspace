@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"terminal.integrated.shell.windows": "C:\\Windows\\System32\\cmd.exe",
+		"python.pythonPath": "${workspaceRoot}/../.kodienv/.env/Scripts/python.exe",
+		"files.exclude": {
+			"**/*.pyc": true,
+			"**/*.pyo": true,
+			"**/__pycache__": true,
+		}
+	}
+}
