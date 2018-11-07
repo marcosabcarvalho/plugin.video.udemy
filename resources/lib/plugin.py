@@ -1,23 +1,9 @@
-import re
-
-from HTMLParser import HTMLParser
-
 from matthuisman import plugin, gui, cache, settings, userdata, inputstream, signals
 from matthuisman.log import log
 
 from .api import API
 from .constants import MY_COURSES_EXPIRY, COURSE_EXPIRY
 from .language import _
-
-h = HTMLParser()
-def strip_tags(text):
-    if not text:
-        return ''
-
-    text = re.sub('\([^\)]*\)', '', text)
-    text = re.sub('<[^>]*>', '', text)
-    text = h.unescape(text)
-    return text
 
 api = API()
 
@@ -88,8 +74,8 @@ def my_courses():
 
         folder.add_item(
             label     = row['title'],
-            path      = plugin.url_for(course, course_id=row['id']),
-            cache_key = cache.key_for(course, course_id=row['id']),
+            path      = plugin.url_for(chapters, course_id=row['id']),
+            cache_key = row['id'],
             art       = {'thumb': row['image_480x270']},
             info      = {'plot': plot},
             is_folder = True,
@@ -105,35 +91,43 @@ def my_courses():
 
 @plugin.route()
 @plugin.login_required()
-@cache.cached(COURSE_EXPIRY)
-def course(course_id):
-    folder = plugin.Folder()
+def chapters(course_id):
+    course = api.course(course_id)
+    folder = plugin.Folder(title=course['title'])
 
-    for row in api.course_items(course_id):
-        if row['_class'] == 'chapter':
-            folder.title = row['course']['title']
+    for chapter_id, chapter in sorted(course['chapters'].iteritems(), key=lambda (k,v): v['index']):
+        folder.add_item(
+            label     = _(_.SECTION_LABEL, section_number=chapter['index'], section_title=chapter['title']),
+            path      = plugin.url_for(lectures, course_id=course_id, chapter_id=chapter_id),
+            cache_key = course_id,
+            art       = {'thumb': course['image']},
+            info      = {'plot': chapter['description']},
+        )
 
-            folder.add_item(
-                label = _(_.SECTION_LABEL, section_number=row['object_index'], section_title=row['title']),
-                art   = {'thumb': row['course']['image_480x270']},
-                info  = {'plot':  strip_tags(row['description'])},
-                is_folder = False,
-            )
+    return folder
 
-        elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
-            folder.add_item(
-                label = row['title'], 
-                path  = plugin.url_for(play, asset_id=row['asset']['id']),
-                art   = {'thumb': row['course']['image_480x270']},
-                info  = {
-                    'title':      row['title'],
-                    'plot':       strip_tags(row['description']), 
-                    'duration':   row['asset']['length'],
-                    'mediatype':  'episode',
-                    'tvshowtitle': row['course']['title'],
-                },
-                playable = True,
-            )
+@plugin.route()
+@plugin.login_required()
+def lectures(course_id, chapter_id):
+    course = api.course(course_id)
+    chapter = course['chapters'][int(chapter_id)]
+
+    folder = plugin.Folder(title=chapter['title'])
+
+    for lecture in chapter['lectures']:
+        folder.add_item(
+            label = lecture['title'], 
+            path  = plugin.url_for(play, asset_id=lecture['asset']['id']),
+            art   = {'thumb': course['image']},
+            info  = {
+                'title':      lecture['title'],
+                'plot':       lecture['description'], 
+                'duration':   lecture['asset']['length'],
+                'mediatype':  'episode',
+                'tvshowtitle': course['title'],
+            },
+            playable = True,
+        )
 
     return folder
 

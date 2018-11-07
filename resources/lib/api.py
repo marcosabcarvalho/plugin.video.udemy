@@ -1,8 +1,22 @@
+import re
+
+from HTMLParser import HTMLParser
+
 from matthuisman import userdata, settings, cache
 from matthuisman.session import Session
 from matthuisman.log import log
 
-from .constants import HEADERS, API_URL
+from .constants import HEADERS, API_URL, COURSE_EXPIRY
+
+h = HTMLParser()
+def strip_tags(text):
+    if not text:
+        return ''
+
+    text = re.sub('\([^\)]*\)', '', text)
+    text = re.sub('<[^>]*>', '', text)
+    text = h.unescape(text)
+    return text
 
 class API(object):
     def new_session(self):
@@ -38,20 +52,57 @@ class API(object):
 
         return self._session.get('users/me/subscribed-courses', params=params).json()['results']
 
-    def course_items(self, course_id):
-        log('API: Course Items')
+    @cache.cached(COURSE_EXPIRY, key=lambda x, course_id: course_id)
+    def course(self, course_id):
+        course = {
+            'title': '',
+            'image': '',
+            'chapters': {},
+        }
 
         params = {
             'page_size'        : 9999,
             'fields[course]'   : 'title,image_480x270',
             'fields[chapter]'  : 'description,object_index,title,course',
-            'fields[lecture]'  : 'title,object_index,description,is_published,created,progress_status,last_watched_second,course,asset',
+            'fields[lecture]'  : 'title,object_index,description,is_published,course,id,asset',
             'fields[asset]'    : 'asset_type,length,status',
             'fields[practice]' : 'id',
             'fields[quiz]'     : 'id',
         }
 
-        return self._session.get('courses/{}/cached-subscriber-curriculum-items'.format(course_id), params=params).json()['results']
+        data = self._session.get('courses/{}/cached-subscriber-curriculum-items'.format(course_id), params=params).json()['results']
+
+        chapter = None
+        for row in data:
+            if row['_class'] == 'chapter':
+                course['title'] = row['course']['title']
+                course['image'] = row['course']['image_480x270']
+
+                chapter = {
+                    'index': row['object_index'],
+                    'title': row['title'],
+                    'description': strip_tags(row['description']),
+                    'lectures': [],
+                }
+
+                course['chapters'][row['id']] = chapter
+            elif row['_class'] == 'lecture' and row['is_published'] and row['asset']['asset_type'] in ('Video', 'Audio'):
+                if not chapter:
+                    continue
+
+                lecture = {
+                    'id': row['id'],
+                    'title': row['title'],
+                    'description': strip_tags(row['description']),
+                    'asset': {
+                        'id': row['asset']['id'],
+                        'length': row['asset']['length'],
+                    }
+                }
+
+                chapter['lectures'].append(lecture)
+
+        return course
 
     def get_stream_urls(self, asset_id):
         params = {

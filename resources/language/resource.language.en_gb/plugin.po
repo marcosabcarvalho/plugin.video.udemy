@@ -39,7 +39,7 @@ msgid "{title}\n\n"
 msgstr ""
 
 msgctxt "#30009"
-msgid "[B]~ Section {section_number}: {section_title} ~[/B]"
+msgid "Section {section_number}: {section_title}"
 msgstr ""
 
 msgctxt "#30010"
