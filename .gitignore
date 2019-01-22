@@ -1,5 +1,4 @@
 __pycache__/
 *.pyc
 *.pyo
-.tmp/
-resources/language/*/strings.po
+resources/lib/kodi.common

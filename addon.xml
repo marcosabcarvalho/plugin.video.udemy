@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.udemy" name="Udemy" provider-name="" version="X">
+<addon id="plugin.video.udemy" name="Udemy" provider-name="MattHuisman.nz" version="0.7.1">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
     <import addon="script.module.requests"/>
@@ -13,6 +13,6 @@
     <license></license>
     <language></language>
     <website>https://www.matthuisman.nz/2018/08/udemy-kodi-add-on.html</website>
-    <news></news>
+    <news>Update Common</news>
   </extension>
 </addon>
