@@ -1,10 +1,13 @@
+import sys
+import traceback
 from urllib import quote
-
 from contextlib import contextmanager
 
 import xbmcgui, xbmc, xbmcgui
 
-from .constants import ADDON_NAME, ADDON_ICON, ADDON_FANART
+from .constants import ADDON_ID, ADDON_NAME, ADDON_ICON, ADDON_FANART
+from .exceptions import GUIError
+from .language import _
 
 def _make_heading(heading=None):
     return heading if heading else ADDON_NAME
@@ -22,6 +25,20 @@ def select(heading=None, options=None, **kwargs):
     heading = _make_heading(heading)
     return xbmcgui.Dialog().select(heading, options, **kwargs)
 
+def exception(heading=_.PLUGIN_EXCEPTION):
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+
+    tb = []
+    for trace in reversed(traceback.extract_tb(exc_traceback)):
+        if ADDON_ID in trace[0]:
+            trace = list(trace)
+            trace[0] = trace[0].split(ADDON_ID)[1]
+            tb.append(trace)
+
+    error = '{}\n{}'.format(''.join(traceback.format_exception_only(exc_type, exc_value)), ''.join(traceback.format_list(tb)))
+
+    text(error, heading=heading)
+
 @contextmanager
 def progress(message, heading=None, percent=0):
     heading = _make_heading(heading)
@@ -37,11 +54,14 @@ def progress(message, heading=None, percent=0):
     try:
         yield dialog
     except:
-        raise
+        raise GUIError('Progress dialog error')
     finally:
         dialog.close()
 
-def input(message, default='', **kwargs):
+def input(message, default='', hide_input=False, **kwargs):
+    if hide_input:
+        kwargs['option'] = xbmcgui.ALPHANUM_HIDE_INPUT
+        
     return xbmcgui.Dialog().input(message, default, **kwargs)
 
 def ok(message, heading=None):
@@ -54,6 +74,11 @@ def ok(message, heading=None):
         lines = (heading,)
 
     return xbmcgui.Dialog().ok(heading, *lines)
+
+def text(message, heading=None, **kwargs):
+    heading = _make_heading(heading)
+    
+    return xbmcgui.Dialog().textviewer(heading, message)
 
 def yes_no(message, heading=None, **kwargs):
     heading = _make_heading(heading)
@@ -89,6 +114,10 @@ class Item(object):
     def is_folder(self): 
         return not self.playable if self._is_folder == None else self._is_folder
 
+    @is_folder.setter
+    def is_folder(self, value):
+        self._is_folder = value
+
     def get_url_headers(self):
         string = ''
         
@@ -103,7 +132,11 @@ class Item(object):
         return string.strip('&')
 
     def get_li(self):
-        li = xbmcgui.ListItem()
+        try:
+            #KODI 18+
+            li = xbmcgui.ListItem(offscreen=True)
+        except:
+            li = xbmcgui.ListItem()
 
         if self.label:
             li.setLabel(self.label)
@@ -138,7 +171,7 @@ class Item(object):
             li.setSubtitles(self.subtitles)
 
         for key in self.properties:
-            li.setProperty(key, self.properties[key])
+            li.setProperty(key, str(self.properties[key]))
 
         headers = self.get_url_headers()
 

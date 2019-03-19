@@ -1,10 +1,14 @@
 import re
+import hashlib
+import hmac
+import datetime
 
 from HTMLParser import HTMLParser
 
 from matthuisman import userdata, settings, cache
 from matthuisman.session import Session
 from matthuisman.log import log
+from matthuisman.exceptions import Error
 
 from .constants import HEADERS, API_URL, COURSE_EXPIRY
 
@@ -17,6 +21,9 @@ def strip_tags(text):
     text = re.sub('<[^>]*>', '', text)
     text = h.unescape(text)
     return text
+
+class APIError(Error):
+    pass
 
 class API(object):
     def new_session(self):
@@ -115,8 +122,9 @@ class API(object):
         log('API: Login')
 
         data = {
-            "email": username,
-            "password": password
+            'email': username,
+            'password': password,
+            'upow': self._get_upow(username, 'login')
         }
 
         params = {
@@ -128,7 +136,7 @@ class API(object):
         
         if not access_token:
             error = data.get('detail', '')
-            raise Exception(error)
+            raise APIError(error)
 
         userdata.set('access_token', access_token)
         self.set_access_token(access_token)
@@ -138,3 +146,57 @@ class API(object):
         userdata.delete('access_token')
         cache.empty()
         self.new_session()
+
+    def _get_upow(self, message, secret):
+        date = datetime.datetime.today().strftime('%Y%m%d')
+
+        def get_token(email, date, secret):
+            message = email + date
+            i = 0
+            
+            for x in range(0, 20):
+                i3 = i * 50
+
+                while True:
+                    i2 = i + 1
+                    if i3 >= i2 * 50:
+                        break
+
+                    i4 = i3 * 1000
+                    i3 += 1
+                    token = hash_calc(i4, i3 * 1000, message, secret)
+                    if token:
+                        return token
+
+                i = i2
+
+            return None
+
+        def m26785a(i):
+            f19175e = ""
+            while i >= 0:
+                f19175e += chr(((i % 26) + 65))
+                i = int(i / 26) - 1
+            return f19175e[::-1]
+
+        def hash_calc(i, i2, message, password):
+            a = m26785a(i)
+            _bytes = bytearray(message + a, 'utf8')
+            password = password.encode()
+
+            while i < i2:
+                _i = i
+                if (_i % 26 == 0):
+                    _bytes = bytearray(message + m26785a(_i), 'utf8')
+                else:
+                    _bytes[len(_bytes) - 1] = (_bytes[len(_bytes) - 1] + 1)
+
+                doFinal = hmac.new(password, _bytes, digestmod=hashlib.sha256).hexdigest()
+                if doFinal[0:2] == '00' and doFinal[2:4] == '00':
+                    return m26785a(i)
+
+                i += 1
+
+            return None
+
+        return date + get_token(message, date, secret)

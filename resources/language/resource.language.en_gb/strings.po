@@ -97,7 +97,7 @@ msgid "Are you sure you want to clear this plugins data?"
 msgstr ""
 
 msgctxt "#32003"
-msgid "Clear Data OK"
+msgid "Data Cleared"
 msgstr ""
 
 msgctxt "#32004"
@@ -218,4 +218,12 @@ msgstr ""
 
 msgctxt "#32031"
 msgid "No Results"
+msgstr ""
+
+msgctxt "#32032"
+msgid "Unexpected Error :("
+msgstr ""
+
+msgctxt "#32033"
+msgid "Failed to download required file: {filename}"
 msgstr ""

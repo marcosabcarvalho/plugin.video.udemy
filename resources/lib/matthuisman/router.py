@@ -5,9 +5,7 @@ from .constants import ROUTE_TAG, ADDON_ID, ROUTE_LIVE_TAG, ROUTE_LIVE_SUFFIX
 from .log import log
 from .language import _
 from . import signals
-
-class Error(Exception):
-    pass
+from .exceptions import Error, RouterError
 
 _routes = {}
 
@@ -38,7 +36,7 @@ def parse_url(url):
     function = _routes.get(_url)
 
     if not function:
-        raise Error(_(_.ROUTER_NO_FUNCTION, raw_url=url, parsed_url=_url))
+        raise RouterError(_(_.ROUTER_NO_FUNCTION, raw_url=url, parsed_url=_url))
 
     log('Router Parsed: \'{0}\' => {1} {2}'.format(url, function.__name__, params))
 
@@ -49,7 +47,7 @@ def url_for_func(func, is_live=False, **kwargs):
         if _routes[url].__name__ == func.__name__:
             return build_url(url, is_live, **kwargs)
 
-    raise Error(_(_.ROUTER_NO_URL, function_name=func.__name__))
+    raise RouterError(_(_.ROUTER_NO_URL, function_name=func.__name__))
 
 def url_for(func_or_url, is_live=False, **kwargs):
     if callable(func_or_url):
@@ -57,7 +55,7 @@ def url_for(func_or_url, is_live=False, **kwargs):
     else:
         return build_url(func_or_url, is_live, **kwargs)
 
-def build_url(url, is_live=False, **kwargs):
+def build_url(url, is_live=False, addon_id=ADDON_ID, **kwargs):
     kwargs[ROUTE_TAG] = url
 
     params = []
@@ -68,7 +66,7 @@ def build_url(url, is_live=False, **kwargs):
     if is_live:
         params.append((ROUTE_LIVE_TAG, ROUTE_LIVE_SUFFIX))
 
-    return 'plugin://{0}/?{1}'.format(ADDON_ID, urlencode(params))
+    return 'plugin://{0}/?{1}'.format(addon_id, urlencode(params))
 
 # router.dispatch('?_=_settings')
 def dispatch(url):
@@ -76,8 +74,11 @@ def dispatch(url):
         signals.emit(signals.BEFORE_DISPATCH)
         function, params = parse_url(url)
         function(**params)
-    except Exception as e:
-        log.exception(e)
+    except Error as e:
+        #expected errors
         signals.emit(signals.ON_ERROR, e)
+    except Exception as e:
+        #unexpected errors
+        signals.emit(signals.ON_EXCEPTION, e)
     finally:
         signals.emit(signals.AFTER_DISPATCH)

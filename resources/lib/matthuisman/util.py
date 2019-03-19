@@ -7,6 +7,7 @@ import xbmc
 from .language import _
 from .constants import ADDON
 from .log import log
+from .exceptions import Error 
 
 def hash_6(value, default=None):
     if not value:
@@ -29,7 +30,7 @@ def strptime(date, str_format):
 
 def process_brightcove(data):
     try:
-        raise Exception(data[0]['message'])
+        raise Error(data[0]['message'])
     except KeyError:
         pass
 
@@ -55,7 +56,7 @@ def process_brightcove(data):
             sources.append({'source': source, 'type': 'hls', 'order_1': 1, 'order_2': 0})
 
     if not sources:
-        raise Exception(_.NO_BRIGHTCOVE_SRC)
+        raise Error(_.NO_BRIGHTCOVE_SRC)
 
     sources = sorted(sources, key = lambda x: (x['order_1'], -x['order_2']))
     source = sources[0]
@@ -80,4 +81,4 @@ def process_brightcove(data):
             art = False,
         )
     else:
-        raise Exception(_.NO_BRIGHTCOVE_SRC)
+        raise Error(_.NO_BRIGHTCOVE_SRC)

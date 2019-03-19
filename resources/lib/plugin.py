@@ -40,11 +40,7 @@ def login():
             break
 
         cache.set('password', password, expires=60)
-
-        try:
-            api.login(username=username, password=password)
-        except Exception as e:
-            gui.ok(_(_.LOGIN_ERROR, error_msg=e))
+        api.login(username=username, password=password)
 
     cache.delete('password')
     gui.refresh()

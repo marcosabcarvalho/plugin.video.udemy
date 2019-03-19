@@ -11,7 +11,7 @@ ADDON_PATH     = xbmc.translatePath(ADDON.getAddonInfo('path')).decode("utf-8")
 ADDON_PROFILE  = xbmc.translatePath(ADDON.getAddonInfo('profile')).decode("utf-8")
 ADDON_ICON     = ADDON.getAddonInfo('icon')
 ADDON_FANART   = ADDON.getAddonInfo('fanart')
-ADDON_DEV      = ADDON.getAddonInfo('version') == 'X'
+ADDON_DEV      = bool(int(os.environ.get('ADDON_DEV', '0')))
 #################
 
 #### DATABASE #####
@@ -57,7 +57,7 @@ IA_ADDON_ID     = 'inputstream.adaptive'
 IA_VERSION_KEY  = '_version'
 IA_HLS_MIN_VER  = 2
 IA_MPD_MIN_VER  = 2
-IA_MODULES_URL  = 'https://raw.githubusercontent.com/matthuisman/decryptmodules/master/modules.json'
+IA_MODULES_URL  = 'https://k.mjh.nz/.decryptmodules/modules.json'
 ###################
 
 #### MISC #####

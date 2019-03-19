@@ -6,6 +6,7 @@ from .log import log
 from .constants import IA_ADDON_ID, IA_VERSION_KEY, IA_HLS_MIN_VER, IA_MPD_MIN_VER, IA_MODULES_URL
 from .language import _
 from .util import get_kodi_version
+from .exceptions import InputStreamError
 
 class InputstreamItem(object):
     manifest_type = ''
@@ -21,7 +22,7 @@ class HLS(InputstreamItem):
     mimetype      = 'application/vnd.apple.mpegurl'
 
     def check(self):
-        return settings.getBool('use_ia_hls', True) and supports_hls()
+        return settings.getBool('use_ia_hls', False) and supports_hls()
 
 class MPD(InputstreamItem):
     manifest_type = 'mpd'
@@ -52,9 +53,6 @@ class Widevine(InputstreamItem):
     def check(self):
         return install_widevine()
 
-class Error(Exception):
-    pass
-
 def get_ia_addon():
     try:
         xbmc.executebuiltin('InstallAddon({})'.format(IA_ADDON_ID), True)
@@ -66,7 +64,7 @@ def get_ia_addon():
 def open_settings():
     ia_addon = get_ia_addon()
     if not ia_addon:
-        raise Error(_.IA_NOT_FOUND)
+        raise InputStreamError(_.IA_NOT_FOUND)
     ia_addon.openSettings()
 
 def supports_hls():
@@ -84,7 +82,7 @@ def supports_playready():
 def install_widevine(reinstall=False):
     ia_addon = get_ia_addon()
     if not ia_addon:
-        raise Error(_.IA_NOT_FOUND)
+        raise InputStreamError(_.IA_NOT_FOUND)
 
     system, arch = _get_system_arch()
     kodi_version = get_kodi_version()
@@ -93,42 +91,45 @@ def install_widevine(reinstall=False):
     if not reinstall and ver_slug == ia_addon.getSetting(IA_VERSION_KEY):
         return True
 
+    ia_addon.setSetting(IA_VERSION_KEY, '')
+
     from .session import Session
 
-    widevine = Session().get(IA_MODULES_URL).json()['widevine']
+    r = Session().get(IA_MODULES_URL)
+    if r.status_code != 200:
+        raise InputStreamError(_(_.ERROR_DOWNLOADING_FILE, filename=IA_MODULES_URL.split('/')[-1]))
+
+    widevine = r.json()['widevine']
 
     if kodi_version < 18:
-        raise Error(_(_.IA_KODI18_REQUIRED, system=system))
+        raise InputStreamError(_(_.IA_KODI18_REQUIRED, system=system))
 
     elif system == 'Android':
         return True
 
     elif system == 'UWP':
-        raise Error(_.IA_UWP_ERROR)
+        raise InputStreamError(_.IA_UWP_ERROR)
 
     elif 'aarch64' in arch:
-        raise Error(_.IA_AARCH64_ERROR)
+        raise InputStreamError(_.IA_AARCH64_ERROR)
 
     elif system + arch not in widevine['platforms']:
-        raise Error(_(_.IA_NOT_SUPPORTED, system=system, arch=arch, kodi_version=kodi_version))
+        raise InputStreamError(_(_.IA_NOT_SUPPORTED, system=system, arch=arch, kodi_version=kodi_version))
 
     decryptpath = xbmc.translatePath(ia_addon.getSetting('DECRYPTERPATH')).decode("utf-8")
     src, dst    = widevine['platforms'][system + arch]
     url         = widevine['base_url'] + src
     wv_path     = os.path.join(decryptpath, dst)
 
-    try:
-        if not os.path.isdir(decryptpath):
-            os.makedirs(decryptpath)
+    if not os.path.isdir(decryptpath):
+        os.makedirs(decryptpath)
 
-        _download(url, wv_path)
-        os.chmod(wv_path, 0755)
-    except Exception as e:
-        e.message = _.IA_ERROR_INSTALLING
-        raise
+    if not _download(url, wv_path):
+        return False
 
     ia_addon.setSetting(IA_VERSION_KEY, ver_slug)
     gui.ok(_.IA_WV_INSTALL_OK)
+
     return True
 
 def _get_system_arch():
@@ -139,7 +140,10 @@ def _get_system_arch():
         arch = platform.architecture()[0]
 
     elif 'arm' in arch:
-        arch = 'armv7'
+        if 'v6' in arch:
+            arch = 'armv6'
+        else:
+            arch = 'armv7'
 
     elif arch == 'i686':
         arch = 'i386'
@@ -154,13 +158,14 @@ def _get_system_arch():
 
 def _download(url, dst_path):
     from .session import Session
-    
+
     resp = Session().get(url, stream=True)
-    resp.raise_for_status()
+    if resp.status_code != 200:
+        raise InputStreamError(_(_.ERROR_DOWNLOADING_FILE, filename=url.split('/')[-1]))
 
     total_length = float(resp.headers.get('content-length'))
 
-    with gui.progress(_(_.IA_DOWNLOADING_FILE, url=url), heading=_.IA_WIDEVINE_DRM) as progress:
+    with gui.progress(_(_.IA_DOWNLOADING_FILE, url=url.split('/')[-1]), heading=_.IA_WIDEVINE_DRM) as progress:
         if os.path.exists(dst_path):
             os.remove(dst_path)
 
@@ -177,3 +182,13 @@ def _download(url, dst_path):
                     resp.close()
 
                 progress.update(percent)
+
+    if progress.iscanceled():
+        if os.path.exists(dst_path):
+            os.remove(dst_path)
+            
+        return False
+
+    #md5 check?
+    
+    return True
