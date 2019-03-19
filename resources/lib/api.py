@@ -5,12 +5,13 @@ import datetime
 
 from HTMLParser import HTMLParser
 
-from matthuisman import userdata, settings, cache
+from matthuisman import userdata, settings
 from matthuisman.session import Session
 from matthuisman.log import log
 from matthuisman.exceptions import Error
 
-from .constants import HEADERS, API_URL, COURSE_EXPIRY
+from .constants import HEADERS, API_URL, DEFAULT_HOST
+from .language import _
 
 h = HTMLParser()
 def strip_tags(text):
@@ -29,18 +30,12 @@ class API(object):
     def new_session(self):
         self.logged_in = False
 
-        sub_domain = settings.get('business_name') if settings.getBool('business_account', False) else ''
-        if not sub_domain:
-            sub_domain = 'www'
-
-        if sub_domain != userdata.get('sub_domain', 'www'):
+        host = settings.get('business_host') if settings.getBool('business_account', False) else DEFAULT_HOST
+        if host != userdata.get('host', DEFAULT_HOST):
             userdata.delete('access_token')
-            cache.empty()
-            userdata.set('sub_domain', sub_domain)
+            userdata.set('host', host)
 
-        base_url = API_URL.format(sub_domain)
-
-        self._session = Session(HEADERS, base_url=base_url)
+        self._session = Session(HEADERS, base_url=API_URL.format(host))
         self.set_access_token(userdata.get('access_token'))
 
     def set_access_token(self, token):
@@ -59,7 +54,6 @@ class API(object):
 
         return self._session.get('users/me/subscribed-courses', params=params).json()['results']
 
-    @cache.cached(COURSE_EXPIRY, key=lambda x, course_id: course_id)
     def course(self, course_id):
         course = {
             'title': '',
@@ -131,12 +125,16 @@ class API(object):
             'fields[user]': 'title,image_100x100,name,access_token',
         }
 
-        data = self._session.post('auth/udemy-auth/login/', params=params, data=data).json()
-        access_token = data.get('access_token')
+        r = self._session.post('auth/udemy-auth/login/', params=params, data=data)
+        try:
+            data = r.json()
+        except:
+            raise APIError(_(_.LOGIN_ERROR, msg=r.status_code))
         
+        access_token = data.get('access_token')
+
         if not access_token:
-            error = data.get('detail', '')
-            raise APIError(error)
+            raise APIError(_(_.LOGIN_ERROR, msg=data.get('detail', '')))
 
         userdata.set('access_token', access_token)
         self.set_access_token(access_token)
@@ -144,7 +142,6 @@ class API(object):
     def logout(self):
         log('API: Logout')
         userdata.delete('access_token')
-        cache.empty()
         self.new_session()
 
     def _get_upow(self, message, secret):

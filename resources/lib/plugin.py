@@ -1,8 +1,7 @@
-from matthuisman import plugin, gui, cache, settings, userdata, inputstream, signals
+from matthuisman import plugin, gui, settings, userdata, inputstream, signals
 from matthuisman.log import log
 
 from .api import API
-from .constants import MY_COURSES_EXPIRY, COURSE_EXPIRY
 from .language import _
 
 api = API()
@@ -19,7 +18,7 @@ def home():
     if not api.logged_in:
         folder.add_item(label=_(_.LOGIN, _bold=True), path=plugin.url_for(login))
     else:
-        folder.add_item(label=_(_.MY_COURSES, _bold=True), path=plugin.url_for(my_courses), cache_key=cache.key_for(my_courses))
+        _my_courses(folder)
         folder.add_item(label=_.LOGOUT, path=plugin.url_for(logout))
 
     folder.add_item(label=_.SETTINGS, path=plugin.url_for(plugin.ROUTE_SETTINGS))
@@ -28,21 +27,17 @@ def home():
 
 @plugin.route()
 def login():
-    while not api.logged_in:
-        username = gui.input(_.ASK_USERNAME, default=userdata.get('username', '')).strip()
-        if not username:
-            break
+    username = gui.input(_.ASK_USERNAME, default=userdata.get('username', '')).strip()
+    if not username:
+        return
 
-        userdata.set('username', username)
+    userdata.set('username', username)
 
-        password = gui.input(_.ASK_PASSWORD, default=cache.get('password', '')).strip()
-        if not password:
-            break
+    password = gui.input(_.ASK_PASSWORD, hide_input=True).strip()
+    if not password:
+        return
 
-        cache.set('password', password, expires=60)
-        api.login(username=username, password=password)
-
-    cache.delete('password')
+    api.login(username=username, password=password)
     gui.refresh()
 
 @plugin.route()
@@ -50,16 +45,10 @@ def logout():
     if not gui.yes_no(_.LOGOUT_YES_NO):
         return
 
-    cache.empty()
     api.logout()
     gui.refresh()
 
-@plugin.route()
-@plugin.login_required()
-@cache.cached(MY_COURSES_EXPIRY)
-def my_courses():
-    folder = plugin.Folder(title=_.MY_COURSES)
-
+def _my_courses(folder):
     for row in api.my_courses():
         plot = _(_.COURSE_INFO, 
             title            = row['headline'], 
@@ -71,7 +60,6 @@ def my_courses():
         folder.add_item(
             label     = row['title'],
             path      = plugin.url_for(chapters, course_id=row['id']),
-            cache_key = row['id'],
             art       = {'thumb': row['image_480x270']},
             info      = {'plot': plot},
             is_folder = True,
@@ -83,10 +71,7 @@ def my_courses():
             is_folder = False,
         )
 
-    return folder
-
 @plugin.route()
-@plugin.login_required()
 def chapters(course_id):
     course = api.course(course_id)
     folder = plugin.Folder(title=course['title'])
@@ -95,7 +80,6 @@ def chapters(course_id):
         folder.add_item(
             label     = _(_.SECTION_LABEL, section_number=chapter['index'], section_title=chapter['title']),
             path      = plugin.url_for(lectures, course_id=course_id, chapter_id=chapter_id),
-            cache_key = course_id,
             art       = {'thumb': course['image']},
             info      = {'plot': chapter['description']},
         )
@@ -103,7 +87,6 @@ def chapters(course_id):
     return folder
 
 @plugin.route()
-@plugin.login_required()
 def lectures(course_id, chapter_id):
     course = api.course(course_id)
     chapter = course['chapters'][int(chapter_id)]

@@ -17,5 +17,8 @@ class Language(BaseLanguage):
     Q_1080P          = 30017
     BUSINESS_ACCOUNT = 30018
     BUSINESS_NAME    = 30019
+    PLAYBACK         = 30020
+    GENERAL          = 30021
+    UTILITY          = 30022
 
 _ = Language()

@@ -29,8 +29,8 @@ msgid "Udemy Password"
 msgstr ""
 
 msgctxt "#30006"
-msgid "Failed to login with below error:\n"
-"{error_msg}"
+msgid "Failed to login.\n"
+"Server Message: {msg}"
 msgstr ""
 
 msgctxt "#30008"
@@ -75,11 +75,23 @@ msgid "1080p"
 msgstr ""
 
 msgctxt "#30018"
-msgid "Udemy Business Account"
+msgid "Business Account"
 msgstr ""
 
 msgctxt "#30019"
-msgid "Organization Account Name"
+msgid "Business Host"
+msgstr ""
+
+msgctxt "#30020"
+msgid "Playback"
+msgstr ""
+
+msgctxt "#30021"
+msgid "General"
+msgstr ""
+
+msgctxt "#30022"
+msgid "Utility"
 msgstr ""
 
 ##COMMON##
