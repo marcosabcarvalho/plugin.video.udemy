@@ -239,3 +239,19 @@ msgstr ""
 msgctxt "#32033"
 msgid "Failed to download required file: {filename}"
 msgstr ""
+
+msgctxt "#32034"
+msgid "General"
+msgstr ""
+
+msgctxt "#32035"
+msgid "Playback"
+msgstr ""
+
+msgctxt "#32036"
+msgid "Advanced"
+msgstr ""
+
+msgctxt "#32037"
+msgid "Verify SSL Certs"
+msgstr ""

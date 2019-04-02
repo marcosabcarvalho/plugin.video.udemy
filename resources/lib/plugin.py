@@ -114,7 +114,7 @@ def lectures(course_id, chapter_id):
 @plugin.login_required()
 def play(asset_id):
     use_ia_hls  = settings.getBool('use_ia_hls')
-    quality     = int(settings.get('max_quality').strip('p'))
+    quality     = int(settings.get('max_quality', '1080p').strip('p'))
 
     stream_urls = api.get_stream_urls(asset_id)
     streams     = stream_urls.get('Video') or stream_urls.get('Audio') or []

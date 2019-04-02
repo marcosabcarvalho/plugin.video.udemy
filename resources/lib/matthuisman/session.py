@@ -1,6 +1,6 @@
 import requests
 
-from . import userdata
+from . import userdata, settings
 from .log import log
 from .constants import SESSION_TIMEOUT, SESSION_ATTEMPTS
 
@@ -13,16 +13,18 @@ class Session(requests.Session):
         self._base_url    = base_url
         self._timeout     = timeout or SESSION_TIMEOUT
         self._attempts    = attempts or SESSION_ATTEMPTS
+        self._verify      = settings.getBool('verify_ssl', True)
 
         self.headers.update(self._headers)
         if self._cookies_key:
             self.cookies.update(userdata.get(self._cookies_key, {}))
 
-    def request(self, method, url, timeout=None, attempts=None, **kwargs):
+    def request(self, method, url, timeout=None, attempts=None, verify=None, **kwargs):
         if not url.startswith('http'):
             url = self._base_url.format(url)
 
         kwargs['timeout'] = timeout or self._timeout
+        kwargs['verify'] = verify or self._verify
         attempts = attempts or self._attempts
 
         for i in range(1, attempts+1):

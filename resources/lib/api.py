@@ -7,7 +7,6 @@ from HTMLParser import HTMLParser
 
 from matthuisman import userdata, settings
 from matthuisman.session import Session
-from matthuisman.log import log
 from matthuisman.exceptions import Error
 
 from .constants import HEADERS, API_URL, DEFAULT_HOST
@@ -36,16 +35,17 @@ class API(object):
             userdata.set('host', host)
 
         self._session = Session(HEADERS, base_url=API_URL.format(host))
-        self.set_access_token(userdata.get('access_token'))
+        self._set_authentication()
 
-    def set_access_token(self, token):
-        if token:
-            self._session.headers.update({'Authorization': 'Bearer {0}'.format(token)})
-            self.logged_in = True
+    def _set_authentication(self):
+        token = userdata.get('access_token')
+        if not token:
+            return
+
+        self._session.headers.update({'Authorization': 'Bearer {}'.format(token)})
+        self.logged_in = True
 
     def my_courses(self):
-        log('API: My Courses')
-
         params = {
             'page_size'       : 9999,
             'ordering'        : '-access_time,-enrolled',
@@ -113,8 +113,6 @@ class API(object):
         return self._session.get('assets/{0}'.format(asset_id), params=params).json().get('stream_urls', {})
 
     def login(self, username, password):
-        log('API: Login')
-
         data = {
             'email': username,
             'password': password,
@@ -132,15 +130,13 @@ class API(object):
             raise APIError(_(_.LOGIN_ERROR, msg=r.status_code))
         
         access_token = data.get('access_token')
-
         if not access_token:
             raise APIError(_(_.LOGIN_ERROR, msg=data.get('detail', '')))
 
         userdata.set('access_token', access_token)
-        self.set_access_token(access_token)
+        self._set_authentication()
 
     def logout(self):
-        log('API: Logout')
         userdata.delete('access_token')
         self.new_session()
 
