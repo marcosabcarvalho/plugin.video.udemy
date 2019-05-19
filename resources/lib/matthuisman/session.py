@@ -2,7 +2,7 @@ import requests
 
 from . import userdata, settings
 from .log import log
-from .constants import SESSION_TIMEOUT, SESSION_ATTEMPTS
+from .constants import SESSION_TIMEOUT, SESSION_ATTEMPTS, SESSION_CHUNKSIZE
 
 class Session(requests.Session):
     def __init__(self, headers=None, cookies_key=None, base_url='{}', timeout=None, attempts=None):
@@ -46,3 +46,11 @@ class Session(requests.Session):
         if self._cookies_key:
             userdata.delete(self._cookies_key)
         self.cookies.clear()
+
+    def chunked_dl(self, url, dst_path, method='GET'):
+        resp = self.request(method, url, stream=True)
+        resp.raise_for_status()
+
+        with open(dst_path, 'wb') as f:
+            for chunk in resp.iter_content(chunk_size=SESSION_CHUNKSIZE):
+                f.write(chunk)

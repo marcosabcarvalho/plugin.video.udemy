@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import xbmcgui, xbmc, xbmcgui
 
-from .constants import ADDON_ID, ADDON_NAME, ADDON_ICON, ADDON_FANART
+from .constants import ADDON_ID, ADDON_NAME, ADDON_ICON, ADDON_FANART, GUI_DEFAULT_AUTOCLOSE
 from .exceptions import GUIError
 from .language import _
 
@@ -53,8 +53,6 @@ def progress(message, heading=None, percent=0):
 
     try:
         yield dialog
-    except:
-        raise GUIError('Progress dialog error')
     finally:
         dialog.close()
 
@@ -80,12 +78,15 @@ def text(message, heading=None, **kwargs):
     
     return xbmcgui.Dialog().textviewer(heading, message)
 
-def yes_no(message, heading=None, **kwargs):
+def yes_no(message, heading=None, autoclose=GUI_DEFAULT_AUTOCLOSE, **kwargs):
     heading = _make_heading(heading)
 
     lines = list()
     for line in message.splitlines():
         lines.append(line)
+
+    if autoclose:
+        kwargs['autoclose'] = autoclose
 
     return xbmcgui.Dialog().yesno(heading, *lines, **kwargs)
 
@@ -142,6 +143,9 @@ class Item(object):
             li.setLabel(self.label)
             if not self.info.get('plot'):
                 self.info['plot'] = self.label
+                
+            if not self.info.get('title'):
+                self.info['title'] = self.label
 
         if self.path:
             li.setPath(self.path)

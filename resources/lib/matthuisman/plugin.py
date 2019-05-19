@@ -78,16 +78,16 @@ def _exception(e):
     resolve()
 
 @route('')
-def _home():
+def _home(**kwargs):
     raise PluginError(_.PLUGIN_NO_DEFAULT_ROUTE)
 
 @route(ROUTE_IA_SETTINGS)
-def _ia_settings():
+def _ia_settings(**kwargs):
     _close()
     inputstream.open_settings()
 
 @route(ROUTE_IA_INSTALL)
-def _ia_install():
+def _ia_install(**kwargs):
     _close()
     inputstream.install_widevine(reinstall=True)
 
@@ -100,13 +100,13 @@ def _close():
     signals.emit(signals.ON_CLOSE)
 
 @route(ROUTE_SETTINGS)
-def _settings():
+def _settings(**kwargs):
     _close()
     settings.open()
     gui.refresh()
 
 @route(ROUTE_RESET)
-def _reset():
+def _reset(**kwargs):
     if not gui.yes_no(_.PLUGIN_RESET_YES_NO):
         return
 
@@ -115,7 +115,7 @@ def _reset():
     signals.emit(signals.AFTER_RESET)
 
 @route(ROUTE_SERVICE)
-def _service():
+def _service(**kwargs):
     try:
         signals.emit(signals.ON_SERVICE)
     except Exception as e:

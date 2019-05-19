@@ -5,3 +5,4 @@ HEADERS = {
 
 DEFAULT_HOST = 'www.udemy.com'
 API_URL = 'https://{}/api-2.0/{{}}'
+PAGE_SIZE = 1400

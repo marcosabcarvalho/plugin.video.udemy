@@ -20,5 +20,6 @@ class Language(BaseLanguage):
     PLAYBACK         = 30020
     GENERAL          = 30021
     UTILITY          = 30022
+    NEXT_PAGE        = 30023
 
 _ = Language()

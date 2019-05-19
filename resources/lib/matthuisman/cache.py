@@ -97,7 +97,7 @@ def remove_expired():
     log('Cache: Deleted {} Expired Rows'.format(deleted))
 
 @router.route(ROUTE_CLEAR_CACHE)
-def clear_cache(key):
+def clear_cache(key, **kwargs):
     delete_count = delete(key)
     msg = _(_.PLUGIN_CACHE_REMOVED, delete_count=delete_count)
     gui.notification(msg)

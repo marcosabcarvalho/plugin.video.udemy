@@ -1,3 +1,7 @@
+import re
+
+from HTMLParser import HTMLParser
+
 from matthuisman import plugin, gui, settings, userdata, inputstream, signals
 from matthuisman.log import log
 
@@ -12,13 +16,13 @@ def before_dispatch():
     plugin.logged_in = api.logged_in
 
 @plugin.route('')
-def home():
+def home(**kwargs):
     folder = plugin.Folder()
 
     if not api.logged_in:
         folder.add_item(label=_(_.LOGIN, _bold=True), path=plugin.url_for(login))
     else:
-        _my_courses(folder)
+        folder.add_item(label=_(_.MY_COURSES, _bold=True), path=plugin.url_for(my_courses))
         folder.add_item(label=_.LOGOUT, path=plugin.url_for(logout))
 
     folder.add_item(label=_.SETTINGS, path=plugin.url_for(plugin.ROUTE_SETTINGS))
@@ -26,7 +30,7 @@ def home():
     return folder
 
 @plugin.route()
-def login():
+def login(**kwargs):
     username = gui.input(_.ASK_USERNAME, default=userdata.get('username', '')).strip()
     if not username:
         return
@@ -41,15 +45,21 @@ def login():
     gui.refresh()
 
 @plugin.route()
-def logout():
+def logout(**kwargs):
     if not gui.yes_no(_.LOGOUT_YES_NO):
         return
 
     api.logout()
     gui.refresh()
 
-def _my_courses(folder):
-    for row in api.my_courses():
+@plugin.route()
+def my_courses(page=1, **kwargs):
+    page   = int(page)
+    folder = plugin.Folder(title=_.MY_COURSES)
+
+    data = api.my_courses(page=page)
+
+    for row in data['results']:
         plot = _(_.COURSE_INFO, 
             title            = row['headline'], 
             num_lectures     = row['num_published_lectures'], 
@@ -59,7 +69,7 @@ def _my_courses(folder):
 
         folder.add_item(
             label     = row['title'],
-            path      = plugin.url_for(chapters, course_id=row['id']),
+            path      = plugin.url_for(chapters, course_id=row['id'], title=row['title']),
             art       = {'thumb': row['image_480x270']},
             info      = {'plot': plot},
             is_folder = True,
@@ -71,48 +81,70 @@ def _my_courses(folder):
             is_folder = False,
         )
 
-@plugin.route()
-def chapters(course_id):
-    course = api.course(course_id)
-    folder = plugin.Folder(title=course['title'])
-
-    for chapter_id, chapter in sorted(course['chapters'].iteritems(), key=lambda (k,v): v['index']):
+    if data['next']:
         folder.add_item(
-            label     = _(_.SECTION_LABEL, section_number=chapter['index'], section_title=chapter['title']),
-            path      = plugin.url_for(lectures, course_id=course_id, chapter_id=chapter_id),
-            art       = {'thumb': course['image']},
-            info      = {'plot': chapter['description']},
+            label = _(_.NEXT_PAGE, _bold=True),
+            path  = plugin.url_for(my_courses, page=page+1),
         )
 
     return folder
 
 @plugin.route()
-def lectures(course_id, chapter_id):
-    course = api.course(course_id)
-    chapter = course['chapters'][int(chapter_id)]
+def chapters(course_id, title, page=1, **kwargs):
+    page   = int(page)
+    folder = plugin.Folder(title=title)
 
-    folder = plugin.Folder(title=chapter['title'])
+    rows, next_page = api.chapters(course_id, page=page)
 
-    for lecture in chapter['lectures']:
+    for row in sorted(rows, key=lambda r: r['object_index']):
         folder.add_item(
-            label = lecture['title'], 
-            path  = plugin.url_for(play, asset_id=lecture['asset']['id']),
-            art   = {'thumb': course['image']},
+            label     = _(_.SECTION_LABEL, section_number=row['object_index'], section_title=row['title']),
+            path      = plugin.url_for(lectures, course_id=course_id, chapter_id=row['id'], title=title),
+            art       = {'thumb': row['course']['image_480x270']},
+            info      = {'plot': strip_tags(row['description'])},
+        )
+
+    if next_page:
+        folder.add_item(
+            label = _(_.NEXT_PAGE, _bold=True),
+            path  = plugin.url_for(chapters, course_id=course_id, title=title, page=page+1),
+        )
+
+    return folder
+
+@plugin.route()
+def lectures(course_id, chapter_id, title, page=1, **kwargs):
+    page    = int(page)
+    folder = plugin.Folder(title=title)
+
+    rows, next_page = api.lectures(course_id, chapter_id, page=page)
+
+    for row in rows:
+        folder.add_item(
+            label = row['title'], 
+            path  = plugin.url_for(play, asset_id=row['asset']['id']),
+            art   = {'thumb': row['course']['image_480x270']},
             info  = {
-                'title':      lecture['title'],
-                'plot':       lecture['description'], 
-                'duration':   lecture['asset']['length'],
+                'title':      row['title'],
+                'plot':       strip_tags(row['description']), 
+                'duration':   row['asset']['length'],
                 'mediatype':  'episode',
-                'tvshowtitle': course['title'],
+                'tvshowtitle': row['course']['title'],
             },
             playable = True,
+        )
+
+    if next_page:
+        folder.add_item(
+            label = _(_.NEXT_PAGE, _bold=True),
+            path  = plugin.url_for(lectures, course_id=course_id, chapter_id=chapter_id, title=title, page=page+1),
         )
 
     return folder
 
 @plugin.route()
 @plugin.login_required()
-def play(asset_id):
+def play(asset_id, **kwargs):
     use_ia_hls  = settings.getBool('use_ia_hls')
     quality     = int(settings.get('max_quality', '1080p').strip('p'))
 
@@ -135,3 +167,13 @@ def play(asset_id):
             return plugin.Item(path=url[0], art=False)
 
     return plugin.Item(path=urls[-1][0], art=False)
+
+h = HTMLParser()
+def strip_tags(text):
+    if not text:
+        return ''
+
+    text = re.sub('\([^\)]*\)', '', text)
+    text = re.sub('<[^>]*>', '', text)
+    text = h.unescape(text)
+    return text

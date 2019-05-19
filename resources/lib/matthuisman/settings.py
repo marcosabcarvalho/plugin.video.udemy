@@ -15,7 +15,10 @@ def setDict(key, value):
     set(key, json.dumps(value))
 
 def getInt(key, default=None):
-    return int(get(key, default))
+    try:
+        return int(get(key))
+    except:
+        return default
 
 def setInt(key, value):
     set(key, int(value))
@@ -26,6 +29,16 @@ def getBool(key, default=False):
         return default
     else:
         return value == 'true'
+
+def getEnum(key, choices=None, default=None):
+    index = getInt(key)
+    if index == None or not choices:
+        return default
+
+    try:
+        return choices[index]
+    except KeyError:
+        return default
 
 def remove(key):
     set(key, '')

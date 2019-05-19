@@ -1,6 +1,8 @@
+from contextlib import contextmanager
 from collections import defaultdict
 
 from .log import log
+from .exceptions import Error
 
 _signals = defaultdict(list)
 
@@ -22,3 +24,12 @@ def emit(signal, *args, **kwargs):
     log.debug("SIGNAL: {}".format(signal))
     for f in _signals.get(signal, []):
         f(*args, **kwargs)
+
+@contextmanager
+def throwable():
+    try:
+        yield 
+    except Error as e:
+        emit(ON_ERROR, e)
+    except Exception as e:
+        emit(ON_EXCEPTION, e)

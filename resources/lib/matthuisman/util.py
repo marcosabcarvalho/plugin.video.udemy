@@ -1,3 +1,4 @@
+import os
 import time
 import hashlib
 from datetime import datetime
@@ -9,12 +10,22 @@ from .constants import ADDON
 from .log import log
 from .exceptions import Error 
 
+def remove_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
 def hash_6(value, default=None):
     if not value:
         return default
 
     h = hashlib.md5(str(value))
     return h.digest().encode('base64')[:6]
+
+def md5sum(filepath):
+    if not os.path.exists(filepath):
+        return None
+
+    return hashlib.md5(open(filepath,'rb').read()).hexdigest()
 
 def get_kodi_version():
     try:

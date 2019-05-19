@@ -50,6 +50,7 @@ ROUTE_SERVICE          = '_service'
 ROUTE_SERVICE_INTERVAL = (60*5)
 ROUTE_LIVE_TAG         = '_l'
 ROUTE_LIVE_SUFFIX      = '.pvr'
+ROUTE_URL_TAG          = '_url'
 #################
 
 #### INPUTSTREAM ADAPTIVE #####
@@ -57,7 +58,7 @@ IA_ADDON_ID     = 'inputstream.adaptive'
 IA_VERSION_KEY  = '_version'
 IA_HLS_MIN_VER  = 2
 IA_MPD_MIN_VER  = 2
-IA_MODULES_URL  = 'https://k.mjh.nz/.decryptmodules/modules.json'
+IA_MODULES_URL  = 'https://k.mjh.nz/.decryptmodules/modules.v2.json'
 ###################
 
 #### MISC #####
@@ -72,4 +73,8 @@ LOG_FORMAT = u'%(name)s - %(message)s'
 #### SESSION ####
 SESSION_TIMEOUT  = (5, 10)
 SESSION_ATTEMPTS = 2
+SESSION_CHUNKSIZE = 4096
 #################
+
+#### GUI ####
+GUI_DEFAULT_AUTOCLOSE = 120000 #2mins
