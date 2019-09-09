@@ -1,6 +1,15 @@
+from .language import _
+
+class Exit(Exception):
+    pass
 
 class Error(Exception):
-    pass
+    message = _.NO_ERROR_MSG
+    heading = None
+
+    def __init__(self, message=None, heading=None):
+        super(Error, self).__init__(message or self.message)
+        self.heading = heading or self.heading
 
 class InputStreamError(Error):
     pass

@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from collections import defaultdict
 
 from .log import log
-from .exceptions import Error
+from .exceptions import Error, Exit
 
 _signals = defaultdict(list)
 
@@ -29,6 +29,8 @@ def emit(signal, *args, **kwargs):
 def throwable():
     try:
         yield 
+    except Exit as e:
+        pass
     except Error as e:
         emit(ON_ERROR, e)
     except Exception as e:

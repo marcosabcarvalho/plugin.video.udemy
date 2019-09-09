@@ -1,8 +1,14 @@
 import requests
 
+import xbmc
+
 from . import userdata, settings
 from .log import log
 from .constants import SESSION_TIMEOUT, SESSION_ATTEMPTS, SESSION_CHUNKSIZE
+
+DEFAULT_HEADERS = {
+    'User-Agent': xbmc.getUserAgent(),
+}
 
 class Session(requests.Session):
     def __init__(self, headers=None, cookies_key=None, base_url='{}', timeout=None, attempts=None):
@@ -15,7 +21,9 @@ class Session(requests.Session):
         self._attempts    = attempts or SESSION_ATTEMPTS
         self._verify      = settings.getBool('verify_ssl', True)
 
+        self.headers.update(DEFAULT_HEADERS)
         self.headers.update(self._headers)
+
         if self._cookies_key:
             self.cookies.update(userdata.get(self._cookies_key, {}))
 

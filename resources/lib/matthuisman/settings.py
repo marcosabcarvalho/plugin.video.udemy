@@ -1,9 +1,11 @@
 import json
 
-from .constants import ADDON
+import xbmcaddon
+
+from .constants import ADDON_ID
 
 def open():
-    ADDON.openSettings()
+    xbmcaddon.Addon(ADDON_ID).openSettings()
 
 def getDict(key, default=None):
     try:
@@ -47,10 +49,10 @@ def setBool(key, value=True):
     set(key, 'true' if value else 'false')
 
 def get(key, default=''):
-    return ADDON.getSetting(key) or default
+    return xbmcaddon.Addon(ADDON_ID).getSetting(key) or default
 
 def set(key, value=''):
-    ADDON.setSetting(key, str(value))
+    xbmcaddon.Addon(ADDON_ID).setSetting(key, str(value))
 
 FRESH = getBool('_fresh', True)
 if FRESH:

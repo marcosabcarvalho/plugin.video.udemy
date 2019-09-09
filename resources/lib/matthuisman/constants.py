@@ -1,3 +1,4 @@
+
 import os
 
 import xbmc, xbmcaddon
@@ -51,6 +52,8 @@ ROUTE_SERVICE_INTERVAL = (60*5)
 ROUTE_LIVE_TAG         = '_l'
 ROUTE_LIVE_SUFFIX      = '.pvr'
 ROUTE_URL_TAG          = '_url'
+FORCE_RUN_FLAG         = '_force_run'
+ROUTE_AUTOPLAY_TAG     = '_autoplay'
 #################
 
 #### INPUTSTREAM ADAPTIVE #####
@@ -59,6 +62,7 @@ IA_VERSION_KEY  = '_version'
 IA_HLS_MIN_VER  = 2
 IA_MPD_MIN_VER  = 2
 IA_MODULES_URL  = 'https://k.mjh.nz/.decryptmodules/modules.v2.json'
+IA_CHECK_EVERY  = 86400 #24 hours
 ###################
 
 #### MISC #####
@@ -78,3 +82,19 @@ SESSION_CHUNKSIZE = 4096
 
 #### GUI ####
 GUI_DEFAULT_AUTOCLOSE = 120000 #2mins
+
+## QUALITY ##
+QUALITY_ASK       = -1
+QUALITY_BEST      = -2
+QUALITY_CUSTOM    = -3
+QUALITY_PASS      = -4
+QUALITY_LOWEST    = -5
+DEFAULT_QUALITY   = QUALITY_PASS
+QUALITY_TAG       = '_quality'
+ROUTE_QUALITY     = '_select_quality'
+
+## PLAY FROM ##
+PLAY_FROM_ASK    = 0
+PLAY_FROM_LIVE   = 1
+PLAY_FROM_START  = 2
+PLAY_FROM_TYPES  = [PLAY_FROM_ASK, PLAY_FROM_LIVE, PLAY_FROM_START]

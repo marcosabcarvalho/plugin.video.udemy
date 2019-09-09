@@ -1,23 +1,25 @@
 from . import settings
 from .constants import USERDATA_KEY
 
-_userdata = settings.getDict(USERDATA_KEY, {})
+def _get_data():
+    return settings.getDict(USERDATA_KEY, {})
 
 def get(key, default=None):
-    return _userdata.get(key, default)
+    return _get_data().get(key, default)
 
 def set(key, value):
-    _userdata[key] = value
-    save()
+    data = _get_data()
+    data[key] = value
+    _set_data(data)
 
-def save():
-    settings.setDict(USERDATA_KEY, _userdata)
+def _set_data(data):
+    settings.setDict(USERDATA_KEY, data)
 
 def delete(key):
-    if key in _userdata:
-        del _userdata[key]
-        save()
+    data = _get_data()
+    if key in data:
+        del data[key]
+        _set_data(data)
     
 def clear():
-    _userdata.clear()
-    save()
+    _set_data({})

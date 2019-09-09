@@ -1,7 +1,11 @@
-import json
 import sys
 from time import time
 from functools import wraps
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 import xbmcgui
 
@@ -21,7 +25,16 @@ cache = Cache()
 @signals.on(signals.BEFORE_DISPATCH)
 def load():
     if not cache.data and settings.getBool('persist_cache', True):
-        cache.data = json.loads(_window.getProperty(cache_key) or "{}")
+        cache.data = {}
+
+        data = _window.getProperty(cache_key)
+        
+        if data:
+            try:
+                cache.data = pickle.loads(data)
+            except:
+                pass
+
         _window.setProperty(cache_key, "{}")
 
 def set(key, value, expires=CACHE_EXPIRY):
@@ -117,7 +130,7 @@ def remove_expired():
         log('Mem Cache: Deleted {} Expired Rows'.format(len(delete)))
 
     if settings.getBool('persist_cache', True):
-        _window.setProperty(cache_key, json.dumps(cache.data))
+        _window.setProperty(cache_key, pickle.dumps(cache.data))
         cache.data.clear()
 
 @router.route(ROUTE_CLEAR_CACHE)

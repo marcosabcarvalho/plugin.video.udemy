@@ -1,18 +1,26 @@
 import os
 import time
 import hashlib
-from datetime import datetime
+import shutil
+import platform
+import struct
 
-import xbmc
+import xbmc, xbmcaddon
 
 from .language import _
-from .constants import ADDON
+from .constants import ADDON_ID, ADDON_NAME, ADDON_PROFILE
 from .log import log
 from .exceptions import Error 
+from . import gui
 
 def remove_file(file_path):
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    except:
+        return False
+    else:
+        return True
 
 def hash_6(value, default=None):
     if not value:
@@ -33,17 +41,14 @@ def get_kodi_version():
     except:
         return 0
 
-def strptime(date, str_format):
-    try:
-        return datetime.strptime(date, str_format)
-    except TypeError:
-        return datetime(*(time.strptime(date, str_format)[0:6]))
-
 def process_brightcove(data):
-    try:
-        raise Error(data[0]['message'])
-    except KeyError:
-        pass
+    if type(data) != dict:
+        try:
+            msg = data[0].get('message', data[0]['error_code'])
+        except KeyError:
+            msg = _.NO_ERROR_MSG
+
+        raise Error(_(_.NO_BRIGHTCOVE_SRC, error=msg))
 
     sources = []
 
@@ -93,3 +98,71 @@ def process_brightcove(data):
         )
     else:
         raise Error(_.NO_BRIGHTCOVE_SRC)
+
+def migrate(new_addon_id, copy_userdata=True):
+    def get_new_addon():
+        try:
+            return xbmcaddon.Addon(new_addon_id)
+        except:
+            return None
+
+    if get_new_addon():
+        return gui.ok(_(_.MIGRATE_OK, old_addon_id=ADDON_ID))
+
+    if not gui.yes_no(_(_.CONFIRM_MIGRATE, new_addon_id=new_addon_id)):
+        return
+
+    xbmc.executebuiltin('InstallAddon({})'.format(new_addon_id), True)
+    xbmc.executeJSONRPC('{{"jsonrpc":"2.0","id":1,"method":"Addons.SetAddonEnabled","params":{{"addonid":"{}","enabled":true}}}}'.format(new_addon_id))
+
+    dst_addon = get_new_addon()
+    if not dst_addon:
+        return
+
+    if copy_userdata:
+        dst_profile = xbmc.translatePath(dst_addon.getAddonInfo('profile')).decode("utf-8")
+
+        if os.path.exists(dst_profile):
+            shutil.rmtree(dst_profile)
+
+        xbmc.executeJSONRPC('{{"jsonrpc":"2.0","id":1,"method":"Addons.SetAddonEnabled","params":{{"addonid":"{}","enabled":false}}}}'.format(ADDON_ID))
+        xbmc.executeJSONRPC('{{"jsonrpc":"2.0","id":1,"method":"Addons.SetAddonEnabled","params":{{"addonid":"{}","enabled":false}}}}'.format(new_addon_id))
+
+        shutil.copytree(ADDON_PROFILE, dst_profile)
+
+        xbmc.executeJSONRPC('{{"jsonrpc":"2.0","id":1,"method":"Addons.SetAddonEnabled","params":{{"addonid":"{}","enabled":true}}}}'.format(new_addon_id))
+
+    gui.ok(_(_.MIGRATE_OK, old_addon_id=ADDON_ID))
+
+def get_system_arch():
+    if xbmc.getCondVisibility('System.Platform.UWP') or '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc/'):
+        system = 'UWP'
+    elif xbmc.getCondVisibility('System.Platform.Android'):
+        system = 'Android'
+    elif xbmc.getCondVisibility('System.Platform.IOS'):
+        system = 'IOS'
+    else:
+        system = platform.system()
+    
+    if system == 'Windows':
+        arch = platform.architecture()[0]
+
+    try:
+        arch = platform.machine()
+    except:
+        arch = ''
+
+    #64bit kernel with 32bit userland
+    if ('aarch64' in arch or 'arm64' in arch) and (struct.calcsize("P") * 8) == 32:
+        arch = 'armv7'
+
+    elif 'arm' in arch:
+        if 'v6' in arch:
+            arch = 'armv6'
+        else:
+            arch = 'armv7'
+            
+    elif arch == 'i686':
+        arch = 'i386'
+
+    return system, arch

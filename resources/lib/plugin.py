@@ -4,9 +4,11 @@ from HTMLParser import HTMLParser
 
 from matthuisman import plugin, gui, settings, userdata, inputstream, signals
 from matthuisman.log import log
+from matthuisman.constants import QUALITY_TAG
 
 from .api import API
 from .language import _
+from .constants import QUALITY_OPTIONS, QUALITY_BEST, QUALITY_LOWEST, QUALITY_ASK
 
 api = API()
 
@@ -146,8 +148,6 @@ def lectures(course_id, chapter_id, title, page=1, **kwargs):
 @plugin.login_required()
 def play(asset_id, **kwargs):
     use_ia_hls  = settings.getBool('use_ia_hls')
-    quality     = int(settings.get('max_quality', '1080p').strip('p'))
-
     stream_urls = api.get_stream_urls(asset_id)
     streams     = stream_urls.get('Video') or stream_urls.get('Audio') or []
 
@@ -155,18 +155,49 @@ def play(asset_id, **kwargs):
     for item in streams:
         if item['type'] != 'application/x-mpegURL':
             urls.append([item['file'], int(item['label'])])
-        elif use_ia_hls:
-            return plugin.Item(inputstream=inputstream.HLS(), path=item['file'], art=False)
+        else:
+            return plugin.Item(path=item['file'], art=False, inputstream=inputstream.HLS())
     
     if not urls:
         raise plugin.Error(_.NO_STREAM_ERROR)
 
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
-    for url in urls:
-        if url[1] <= quality:
-            return plugin.Item(path=url[0], art=False)
 
-    return plugin.Item(path=urls[-1][0], art=False)
+    if not settings.getBool('quality_enabled'):
+        return plugin.Item(path=urls[0][0], art=False)
+
+    quality = settings.getEnum('mp4_quality', QUALITY_OPTIONS, default=QUALITY_BEST)
+
+    if quality == QUALITY_ASK or kwargs.get(QUALITY_TAG):
+        options = [QUALITY_BEST]
+        labels  = [_.QUALITY_BEST]
+
+        for url in urls:
+            options.append(url[1])
+            labels.append('{}P'.format(url[1]))
+
+        options.append(QUALITY_LOWEST)
+        labels.append(_.QUALITY_LOWEST)
+
+        index = gui.select(_.SELECT_QUALITY, labels)
+        if index < 0:
+            return
+
+        quality = options[index]
+
+    if quality == QUALITY_BEST:
+        selected = urls[0]
+    elif quality == QUALITY_LOWEST:
+        selected = urls[-1]
+    else:
+        selected = urls[-1]
+
+        for url in urls:
+            if url[1] <= quality:
+                selected = url
+                break
+
+    return plugin.Item(path=selected[0], art=False)
 
 h = HTMLParser()
 def strip_tags(text):

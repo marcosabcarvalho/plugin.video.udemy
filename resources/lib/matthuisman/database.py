@@ -1,4 +1,5 @@
 import os
+import json
 
 try:
     import cPickle as pickle
@@ -34,6 +35,15 @@ class PickledField(peewee.BlobField):
         if value != None:
             return super(PickledField, self).python_value(pickle.loads(str(value)))
 
+class JSONField(peewee.TextField):
+    def db_value(self, value):
+        if value is not None:
+            return json.dumps(value)
+
+    def python_value(self, value):
+        if value is not None:
+            return json.loads(value)
+
 class Model(peewee.Model):
     checksum = ''
 
@@ -41,7 +51,7 @@ class Model(peewee.Model):
     def get_checksum(cls):
         ctx = db.get_sql_context()
         query = cls._schema._create_table()
-        return hash_6([cls.checksum, ctx.sql(query).query()])
+        return hash_6([cls.checksum, ctx.sql(query).query(), cls._meta.indexes])
 
     @classmethod
     def delete_where(cls, *args, **kwargs):
@@ -65,18 +75,6 @@ class Model(peewee.Model):
     @classmethod
     def truncate(cls):
         return super(Model, cls).delete().execute()
-
-    @classmethod
-    def replace_many(cls, data):
-        with db.atomic():
-            for idx in range(0, len(data), DB_MAX_INSERTS):
-                super(Model, cls).replace_many(data[idx:idx+DB_MAX_INSERTS]).execute()
-
-    @classmethod
-    def insert_many(cls, data):
-        with db.atomic():
-            for idx in range(0, len(data), DB_MAX_INSERTS):
-                super(Model, cls).insert_many(data[idx:idx+DB_MAX_INSERTS]).execute()
 
     def to_dict(self):
         data = {}
