@@ -4,76 +4,44 @@ from urlparse import urlparse
 import xbmc
 import json
 
-from . import userdata, gui, router, inputstream, router
-from .constants import ADDON_DEV
+from . import userdata, gui, router, inputstream, settings
 from .language import _
-from .constants import QUALITY_ASK, QUALITY_BEST, QUALITY_CUSTOM, QUALITY_PASS, QUALITY_LOWEST, DEFAULT_QUALITY, ROUTE_QUALITY
+from .constants import QUALITY_TYPES, QUALITY_ASK, QUALITY_BEST, QUALITY_CUSTOM, QUALITY_SKIP, QUALITY_LOWEST, QUALITY_TAG, QUALITY_DISABLED
 from .log import log
-from .exceptions import Error
 from .parser import M3U8, MPD
 
-PROXY_FILE = xbmc.translatePath('special://temp/proxy_playlist.m3u8')
-
-def select_quality(qualities=None, is_settings=False):
+def select_quality(qualities):
     options = []
 
-    if is_settings:
-        options.append([QUALITY_ASK, _.QUALITY_ASK])
-
     options.append([QUALITY_BEST, _.QUALITY_BEST])
-    options.extend(qualities or [[QUALITY_CUSTOM, _.QUALITY_CUSTOM]])
+    options.extend(qualities)
     options.append([QUALITY_LOWEST, _.QUALITY_LOWEST])
-    options.append([QUALITY_PASS, _.QUALITY_PASSTHROUGH])
+    options.append([QUALITY_SKIP, _.QUALITY_SKIP])
 
     values = [x[0] for x in options]
     labels = [x[1] for x in options]
 
-    if is_settings:
-        current = userdata.get('quality', DEFAULT_QUALITY)
-    else:
-        current = userdata.get('last_quality')
+    current = userdata.get('last_quality')
 
     default = 0
     if current:
         try:
             default = values.index(current)
         except:
-            if not qualities:
-                default = values.index(QUALITY_CUSTOM) if current > 0 else 0
-            else:
-                default = values.index(qualities[-1][0])
+            default = values.index(qualities[-1][0])
 
-                for quality in qualities:
-                    if quality[0] <= current:
-                        default = values.index(quality[0])
-                        break
+            for quality in qualities:
+                if quality[0] <= current:
+                    default = values.index(quality[0])
+                    break
                 
-    index = gui.select(_.SELECT_QUALITY, labels, preselect=default)
+    index = gui.select(_.PLAYBACK_QUALITY, labels, preselect=default)
     if index < 0:
         return None
 
-    value = values[index]
-    label = labels[index]
+    userdata.set('last_quality', values[index])
 
-    if value == QUALITY_CUSTOM:
-        value = gui.numeric(_.QUALITY_CUSTOM_INPUT, default=current if current > 0 else '')
-        if not value:
-            return None
-
-        value = int(value)
-        label = _(_.QUALITY_BITRATE, bandwidth=float(value)/1000000, resolution='', fps='').strip()
-
-    if is_settings:
-        userdata.set('quality', value)
-        gui.notification(_(_.QUALITY_SET, label=label))
-    else:
-        userdata.set('last_quality', value)
-
-    return value
-
-@router.route(ROUTE_QUALITY)
-def _select_quality(**kwargs):
-    select_quality(is_settings=True)
+    return values[index]
 
 def reset_thread(reset_func):
     log.debug('Settings Reset Thread: STARTED')
@@ -159,13 +127,23 @@ def set_settings(min_bandwidth, max_bandwidth, is_ia=False):
         thread.daemon = True
         thread.start()
 
+def get_quality():
+    return settings.getEnum('default_quality', QUALITY_TYPES, default=QUALITY_ASK)
+
+def add_context(item):
+    if item.playable and get_quality() != QUALITY_DISABLED:
+        url = router.add_url_args(item.path, **{QUALITY_TAG: QUALITY_ASK})
+        item.context.append((_.PLAYBACK_QUALITY, 'XBMC.PlayMedia({})'.format(url)))
+
 def parse(item, quality=None):
     if quality is None:
-        quality = userdata.get('quality', DEFAULT_QUALITY)
+        quality = get_quality()
+        if quality == QUALITY_CUSTOM:
+            quality = int(settings.getFloat('max_bandwidth')*1000000)
     else:
         quality = int(quality)
 
-    if quality == QUALITY_PASS:
+    if quality in (QUALITY_DISABLED, QUALITY_SKIP):
         return
 
     url   = item.path.split('|')[0]
@@ -212,12 +190,10 @@ def parse(item, quality=None):
 
     if quality == QUALITY_ASK:
         quality = select_quality(qualities)
-
-    if not quality:
-        return False
-
-    elif quality == QUALITY_PASS:
-        return
+        if not quality:
+            return False
+        elif quality == QUALITY_SKIP:
+            return
 
     min_bandwidth, max_bandwidth = parser.bandwidth_range(quality)
     set_settings(min_bandwidth, max_bandwidth, is_ia)

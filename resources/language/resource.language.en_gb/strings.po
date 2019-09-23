@@ -172,7 +172,7 @@ msgstr ""
 
 msgctxt "#32016"
 msgid "There was an unexpected error installing the Widevine CDM\n"
-"Please restart KODI and try again"
+"Please restart Kodi and try again"
 msgstr ""
 
 msgctxt "#32017"
@@ -196,8 +196,8 @@ msgid "Install Widevine CDM"
 msgstr ""
 
 msgctxt "#32022"
-msgid "Widevine CDM Installed OK\n"
-"If videos do not play, please restart KODI and try again"
+msgid "Widevine CDM ({version}) Installed OK\n"
+"If videos do not play, please restart Kodi and try again"
 msgstr ""
 
 msgctxt "#32023"
@@ -262,9 +262,7 @@ msgid "Verify SSL Certs"
 msgstr ""
 
 msgctxt "#32038"
-msgid "New Widevine CDM available!\n"
-"Using an old version may cause playback issues\n"
-"Download and override existing CDM?"
+msgid "Select Widevine CDM version to install"
 msgstr ""
 
 msgctxt "#32039"
@@ -280,17 +278,30 @@ msgctxt "#32041"
 msgid "No Items"
 msgstr ""
 
-msgctxt "#32042"
-msgid "Default Playback Quality"
-msgstr ""
+
 
 msgctxt "#32043"
 msgid "Best"
 msgstr ""
 
+msgctxt "#32044"
+msgid "HTTP Timeout (seconds)"
+msgstr ""
+
+msgctxt "#32045"
+msgid "HTTP Retries"
+msgstr ""
+
+msgctxt "#32046"
+msgid "Chunksize"
+msgstr ""
+
+msgctxt "#32047"
+msgid "{label} (LATEST)"
+msgstr ""
 
 msgctxt "#32048"
-msgid "Pass-through"
+msgid "Bypass"
 msgstr ""
 
 msgctxt "#32049"
@@ -312,9 +323,7 @@ msgctxt "#32052"
 msgid "Unknown Error"
 msgstr ""
 
-msgctxt "#32053"
-msgid "Play at Quality"
-msgstr ""
+
 
 msgctxt "#32054"
 msgid "Custom"
@@ -324,16 +333,18 @@ msgctxt "#32055"
 msgid "Ask"
 msgstr ""
 
-msgctxt "#32056"
-msgid "Quality Set: {label}"
-msgstr ""
+
 
 msgctxt "#32057"
 msgid "Playback URL returned error code: {error_code}"
 msgstr ""
 
+msgctxt "#32058"
+msgid "{version} (INSTALLED)"
+msgstr ""
+
 msgctxt "#32059"
-msgid "Enter maximum bandwidth (bit/s)"
+msgid "Max Bandwidth (Mbit/s)"
 msgstr ""
 
 msgctxt "#32060"
@@ -344,9 +355,7 @@ msgctxt "#32061"
 msgid "Playback Quality"
 msgstr ""
 
-msgctxt "#32062"
-msgid "Enable Quality Select"
-msgstr ""
+
 
 msgctxt "#32063"
 msgid "Live Play Action"
@@ -374,4 +383,21 @@ msgstr ""
 
 msgctxt "#32069"
 msgid "{fps:.2f} FPS"
+msgstr ""
+
+msgctxt "#32070"
+msgid "Available Widevine CDM Versions"
+msgstr ""
+
+msgctxt "#32071"
+msgid "Unknown {version} (INSTALLLED)"
+msgstr ""
+
+msgctxt "#32072"
+msgid "Widevine CDM ({version}) Installed\n"
+"If content does not play, you may need to install the latest CDM version instead."
+msgstr ""
+
+msgctxt "#32073"
+msgid "Disabled"
 msgstr ""

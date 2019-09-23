@@ -93,7 +93,6 @@ class Model(peewee.Model):
 
     class Meta:
         database = db
-        only_save_dirty = True
 
 class KeyStore(Model):
     key     = peewee.TextField(unique=True)

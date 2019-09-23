@@ -57,7 +57,7 @@ def logout(**kwargs):
 @plugin.route()
 def my_courses(page=1, **kwargs):
     page   = int(page)
-    folder = plugin.Folder(title=_.MY_COURSES)
+    folder = plugin.Folder(_.MY_COURSES)
 
     data = api.my_courses(page=page)
 
@@ -94,7 +94,7 @@ def my_courses(page=1, **kwargs):
 @plugin.route()
 def chapters(course_id, title, page=1, **kwargs):
     page   = int(page)
-    folder = plugin.Folder(title=title)
+    folder = plugin.Folder(title)
 
     rows, next_page = api.chapters(course_id, page=page)
 
@@ -117,7 +117,7 @@ def chapters(course_id, title, page=1, **kwargs):
 @plugin.route()
 def lectures(course_id, chapter_id, title, page=1, **kwargs):
     page    = int(page)
-    folder = plugin.Folder(title=title)
+    folder = plugin.Folder(title)
 
     rows, next_page = api.lectures(course_id, chapter_id, page=page)
 
@@ -163,9 +163,6 @@ def play(asset_id, **kwargs):
 
     urls = sorted(urls, key=lambda x: x[1], reverse=True)
 
-    if not settings.getBool('quality_enabled'):
-        return plugin.Item(path=urls[0][0], art=False)
-
     quality = settings.getEnum('mp4_quality', QUALITY_OPTIONS, default=QUALITY_BEST)
 
     if quality == QUALITY_ASK or kwargs.get(QUALITY_TAG):
@@ -179,7 +176,7 @@ def play(asset_id, **kwargs):
         options.append(QUALITY_LOWEST)
         labels.append(_.QUALITY_LOWEST)
 
-        index = gui.select(_.SELECT_QUALITY, labels)
+        index = gui.select(_.PLAYBACK_QUALITY, labels)
         if index < 0:
             return
 

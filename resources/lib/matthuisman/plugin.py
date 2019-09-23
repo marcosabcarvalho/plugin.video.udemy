@@ -7,7 +7,7 @@ from functools import wraps
 import xbmc, xbmcplugin
 
 from . import router, gui, settings, userdata, inputstream, signals, quality_player
-from .constants import ROUTE_SETTINGS, ROUTE_RESET, ROUTE_SERVICE, ROUTE_CLEAR_CACHE, ROUTE_IA_SETTINGS, ROUTE_IA_INSTALL, ADDON_ICON, ADDON_FANART, ADDON_ID, ADDON_NAME, ROUTE_AUTOPLAY_TAG, ADDON_PROFILE, QUALITY_TAG, QUALITY_ASK
+from .constants import ROUTE_SETTINGS, ROUTE_RESET, ROUTE_SERVICE, ROUTE_CLEAR_CACHE, ROUTE_IA_SETTINGS, ROUTE_IA_INSTALL, ADDON_ICON, ADDON_FANART, ADDON_ID, ADDON_NAME, ROUTE_AUTOPLAY_TAG, ADDON_PROFILE, QUALITY_TAG
 from .log import log
 from .language import _
 from .exceptions import PluginError, Exit
@@ -21,6 +21,10 @@ def exception(msg=''):
     raise PluginError(msg)
 
 logged_in   = False
+
+class Redirect(object):
+    def __init__(self, location):
+        self.location = location
 
 # @plugin.login_required()
 def login_required():
@@ -49,6 +53,11 @@ def route(url=None):
                 item.display()
             elif isinstance(item, Item):
                 item.play(quality=kwargs.get(QUALITY_TAG))
+            elif isinstance(item, Redirect):
+                if _handle() > 0:
+                    xbmcplugin.endOfDirectory(_handle(), succeeded=True, updateListing=True, cacheToDisc=True)
+
+                gui.redirect(item.location)
             else:
                 resolve()
 
@@ -198,9 +207,7 @@ class Item(gui.Item):
         #     url = url_for(ROUTE_CLEAR_CACHE, key=self.cache_key)
         #     self.context.append((_.PLUGIN_CONTEXT_CLEAR_CACHE, 'XBMC.RunPlugin({})'.format(url)))
 
-        if self.playable and settings.getBool('quality_enabled', True):
-            url = router.add_url_args(self.path, **{QUALITY_TAG: QUALITY_ASK})
-            self.context.append((_.PLAY_AT_QUALITY, 'XBMC.PlayMedia({})'.format(url)))
+        quality_player.add_context(self)
 
         return super(Item, self).get_li()
 
@@ -213,9 +220,8 @@ class Item(gui.Item):
             pass
 
         result = True
-        if settings.getBool('quality_enabled', True):
-            if quality_player.parse(self, quality=quality) == False:
-                result = False
+        if quality_player.parse(self, quality=quality) == False:
+            result = False
 
         li     = self.get_li()
         handle = _handle()
@@ -227,9 +233,9 @@ class Item(gui.Item):
 
 #Plugin.Folder()
 class Folder(object):
-    def __init__(self, items=None, title=None, content='episodes', updateListing=False, cacheToDisc=True, sort_methods=None, thunb=None, fanart=None, no_items_label=_.NO_ITEMS):
-        self.items = items or []
+    def __init__(self, title=None, items=None, content='episodes', updateListing=False, cacheToDisc=True, sort_methods=None, thunb=None, fanart=None, no_items_label=_.NO_ITEMS):
         self.title = title
+        self.items = items or []
         self.content = content
         self.updateListing = updateListing
         self.cacheToDisc = cacheToDisc

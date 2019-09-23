@@ -146,11 +146,11 @@ def get_system_arch():
     
     if system == 'Windows':
         arch = platform.architecture()[0]
-
-    try:
-        arch = platform.machine()
-    except:
-        arch = ''
+    else:
+        try:
+            arch = platform.machine()
+        except:
+            arch = ''
 
     #64bit kernel with 32bit userland
     if ('aarch64' in arch or 'arm64' in arch) and (struct.calcsize("P") * 8) == 32:

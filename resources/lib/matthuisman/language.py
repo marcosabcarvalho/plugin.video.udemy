@@ -68,28 +68,30 @@ class BaseLanguage(object):
     PLAYBACK                    = 32035
     ADVANCED                    = 32036
     VERIFY_SSL                  = 32037
-    NEW_IA_VERSION              = 32038
+    SELECT_IA_VERSION           = 32038
     SERVICE_DELAY               = 32039
     MD5_MISMATCH                = 32040
     NO_ITEMS                    = 32041
-    DEFAULT_QUALITY             = 32042
-    QUALITY_BEST                = 32043
 
-    QUALITY_PASSTHROUGH         = 32048
+    QUALITY_BEST                = 32043
+    HTTP_TIMEOUT                = 32044
+    HTTP_RETRIES                = 32045
+    CHUNKSIZE                   = 32046
+    WV_LATEST                   = 32047
+    QUALITY_SKIP                = 32048
     NO_AUTOPLAY_FOUND           = 32049
     CONFIRM_MIGRATE             = 32050
     MIGRATE_OK                  = 32051
     NO_ERROR_MSG                = 32052
-    PLAY_AT_QUALITY             = 32053
+
     QUALITY_CUSTOM              = 32054
     QUALITY_ASK                 = 32055
-    QUALITY_SET                 = 32056
-    PLAYBACK_ERROR              = 32057
 
-    QUALITY_CUSTOM_INPUT        = 32059
+    PLAYBACK_ERROR              = 32057
+    WV_INSTALLED                = 32058
+    MAX_BANDWIDTH               = 32059
     QUALITY_LOWEST              = 32060
-    SELECT_QUALITY              = 32061
-    ENABLE_QUALITY              = 32062
+    PLAYBACK_QUALITY            = 32061
 
     PLAY_DEFAULT_ACTION         = 32063
     PLAY_FROM_START             = 32064
@@ -98,6 +100,10 @@ class BaseLanguage(object):
     PLAY_FROM                   = 32067
     QUALITY_BITRATE             = 32068
     QUALITY_FPS                 = 32069
+    SELECT_WV_VERSION           = 32070
+    WV_UNKNOWN                  = 32071
+    WV_NOT_LATEST               = 32072
+    DISABLED                    = 32073
 
     def __getattribute__(self, name):
         attr = object.__getattribute__(self, name)

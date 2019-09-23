@@ -61,7 +61,7 @@ IA_ADDON_ID     = 'inputstream.adaptive'
 IA_VERSION_KEY  = '_version'
 IA_HLS_MIN_VER  = 2
 IA_MPD_MIN_VER  = 2
-IA_MODULES_URL  = 'https://k.mjh.nz/.decryptmodules/modules.v2.json'
+IA_MODULES_URL  = 'https://k.mjh.nz/.decryptmodules/modules.v3.json'
 IA_CHECK_EVERY  = 86400 #24 hours
 ###################
 
@@ -74,24 +74,18 @@ LOG_ID     = ADDON_ID
 LOG_FORMAT = u'%(name)s - %(message)s'
 #################
 
-#### SESSION ####
-SESSION_TIMEOUT  = (5, 10)
-SESSION_ATTEMPTS = 2
-SESSION_CHUNKSIZE = 4096
-#################
-
 #### GUI ####
 GUI_DEFAULT_AUTOCLOSE = 120000 #2mins
 
 ## QUALITY ##
-QUALITY_ASK       = -1
-QUALITY_BEST      = -2
-QUALITY_CUSTOM    = -3
-QUALITY_PASS      = -4
-QUALITY_LOWEST    = -5
-DEFAULT_QUALITY   = QUALITY_PASS
-QUALITY_TAG       = '_quality'
-ROUTE_QUALITY     = '_select_quality'
+QUALITY_ASK      = -1
+QUALITY_BEST     = -2
+QUALITY_LOWEST   = -3
+QUALITY_SKIP     = -4
+QUALITY_CUSTOM   = -5
+QUALITY_DISABLED = -6
+QUALITY_TYPES    = [QUALITY_ASK, QUALITY_BEST, QUALITY_LOWEST, QUALITY_SKIP, QUALITY_CUSTOM, QUALITY_DISABLED]
+QUALITY_TAG      = '_quality'
 
 ## PLAY FROM ##
 PLAY_FROM_ASK    = 0

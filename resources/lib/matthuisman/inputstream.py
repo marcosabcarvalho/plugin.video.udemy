@@ -8,9 +8,9 @@ import xbmc, xbmcaddon
 
 from . import gui, settings
 from .log import log
-from .constants import IA_ADDON_ID, IA_VERSION_KEY, IA_HLS_MIN_VER, IA_MPD_MIN_VER, IA_MODULES_URL, SESSION_CHUNKSIZE, IA_CHECK_EVERY
+from .constants import IA_ADDON_ID, IA_VERSION_KEY, IA_HLS_MIN_VER, IA_MPD_MIN_VER, IA_MODULES_URL, IA_CHECK_EVERY
 from .language import _
-from .util import get_kodi_version, md5sum, remove_file
+from .util import get_kodi_version, md5sum, remove_file, get_system_arch, hash_6
 from .exceptions import InputStreamError
 
 class InputstreamItem(object):
@@ -119,8 +119,13 @@ def supports_playready():
 
 def install_widevine(reinstall=False):
     ia_addon     = get_ia_addon(required=True)
-    system, arch = _get_system_arch()
+    system, arch = get_system_arch()
     kodi_version = get_kodi_version()
+    DST_FILES    = {
+        'Linux':   'libwidevinecdm.so',
+        'Darwin':  'libwidevinecdm.dylib',
+        'Windows': 'widevinecdm.dll',
+    }
 
     if kodi_version < 18:
         raise InputStreamError(_(_.IA_KODI18_REQUIRED, system=system))
@@ -133,18 +138,22 @@ def install_widevine(reinstall=False):
 
     elif 'aarch64' in arch or 'arm64' in arch:
         raise InputStreamError(_.IA_AARCH64_ERROR)
+    
+    elif system not in DST_FILES:
+        raise InputStreamError(_(_.IA_NOT_SUPPORTED, system=system, arch=arch, kodi_version=kodi_version))
 
-    last_check = int(ia_addon.getSetting('_last_check') or 0)
-    ver_slug   = system + arch + str(kodi_version) + ia_addon.getAddonInfo('version')
+    last_check   = int(ia_addon.getSetting('_last_check') or 0)
+    decryptpath  = xbmc.translatePath(ia_addon.getSetting('DECRYPTERPATH')).decode("utf-8")
+    wv_path      = os.path.join(decryptpath, DST_FILES[system])
+    installed    = md5sum(wv_path)
 
-    if ver_slug != ia_addon.getSetting(IA_VERSION_KEY):
+    if not installed:
         reinstall = True
 
     if not reinstall and time.time() - last_check < IA_CHECK_EVERY:
         return True
 
     ## DO INSTALL ##
-    ia_addon.setSetting(IA_VERSION_KEY, '')
     ia_addon.setSetting('_last_check', str(int(time.time())))
 
     from .session import Session
@@ -153,56 +162,60 @@ def install_widevine(reinstall=False):
     if r.status_code != 200:
         raise InputStreamError(_(_.ERROR_DOWNLOADING_FILE, filename=IA_MODULES_URL.split('/')[-1]))
 
-    widevine    = r.json()['widevine']
-    wv_platform = widevine['platforms'].get(system + arch, None)
+    widevine     = r.json()['widevine']
+    wv_versions  = widevine['platforms'].get(system + arch, [])
+    latest       = wv_versions[0]
+    latest_known = ia_addon.getSetting('_latest_md5')
+    ia_addon.setSetting('_latest_md5', latest['md5'])
 
-    if not wv_platform:
+    if not wv_versions:
         raise InputStreamError(_(_.IA_NOT_SUPPORTED, system=system, arch=arch, kodi_version=kodi_version))
 
-    decryptpath = xbmc.translatePath(ia_addon.getSetting('DECRYPTERPATH')).decode("utf-8")
-    url         = widevine['base_url'] + wv_platform['src']
-    wv_path     = os.path.join(decryptpath, wv_platform['dst'])
+    if not reinstall and (installed == latest['md5'] or latest['md5'] == latest_known):
+        return True
 
-    if not os.path.isdir(decryptpath):
-        os.makedirs(decryptpath)
+    current = None
+    for wv in wv_versions:
+        if wv['md5'] == installed:
+            current = wv
+            wv['label'] = _(_.WV_INSTALLED, version=wv['ver'])
+        else:
+            wv['label'] = wv['ver']
 
-    if not _download(url, wv_path, wv_platform['md5']):
+    if installed and not current:
+        wv_versions.append({
+            'ver': installed[:6],
+            'label': _(_.WV_UNKNOWN, version=installed[:6]),
+        })
+
+    latest['label'] = _(_.WV_LATEST, label=latest['label'])
+    labels = [x['label'] for x in wv_versions]
+
+    index = gui.select(_.SELECT_WV_VERSION, options=labels)
+    if index < 0:
         return False
 
-    ia_addon.setSetting(IA_VERSION_KEY, ver_slug)
+    selected = wv_versions[index]
 
-    if reinstall:
-        gui.ok(_.IA_WV_INSTALL_OK)
+    if 'src' in selected:
+        url = widevine['base_url'] + selected['src']
+        if not _download(url, wv_path, selected['md5']):
+            return False
+
+    if selected != latest:
+        message = _.WV_NOT_LATEST
+    else:
+        message = _.IA_WV_INSTALL_OK
+    
+    gui.ok(_(message, version=selected['ver']))
 
     return True
 
-def _get_system_arch():
-    if xbmc.getCondVisibility('system.platform.android'):
-        system = 'Android'
-    elif 'WindowsApps' in xbmc.translatePath('special://xbmcbin/'):
-        system = 'UWP'
-    else:
-        system = platform.system()
-    
-    if system == 'Windows':
-        arch = platform.architecture()[0]
-    elif system == 'Android':
-        arch = ''
-    else:
-        arch = platform.machine()
-
-    if 'arm' in arch:
-        if 'v6' in arch:
-            arch = 'armv6'
-        else:
-            arch = 'armv7'
-
-    elif arch == 'i686':
-        arch = 'i386'
-
-    return system, arch
-
 def _download(url, dst_path, md5=None):
+    dir_path = os.path.dirname(dst_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
     filename   = url.split('/')[-1]
     downloaded = 0
 
@@ -210,8 +223,6 @@ def _download(url, dst_path, md5=None):
         if md5 and md5sum(dst_path) == md5:
             log.debug('MD5 of local file {} same. Skipping download'.format(filename))
             return True
-        elif not gui.yes_no(_.NEW_IA_VERSION):
-            return False
         else:
             remove_file(dst_path)
             
@@ -225,7 +236,7 @@ def _download(url, dst_path, md5=None):
         total_length = float(resp.headers.get('content-length', 1))
 
         with open(dst_path, 'wb') as f:
-            for chunk in resp.iter_content(chunk_size=SESSION_CHUNKSIZE):
+            for chunk in resp.iter_content(chunk_size=settings.getInt('chunksize', 4096)):
                 f.write(chunk)
                 downloaded += len(chunk)
                 percent = int(downloaded*100/total_length)

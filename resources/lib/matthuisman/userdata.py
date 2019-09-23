@@ -15,6 +15,12 @@ def set(key, value):
 def _set_data(data):
     settings.setDict(USERDATA_KEY, data)
 
+def pop(key, default=None):
+    data = _get_data()
+    value = data.pop(key, default)
+    _set_data(data)
+    return value
+
 def delete(key):
     data = _get_data()
     if key in data:

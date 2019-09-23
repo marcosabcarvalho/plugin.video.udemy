@@ -25,6 +25,9 @@ def select(heading=None, options=None, **kwargs):
     heading = _make_heading(heading)
     return xbmcgui.Dialog().select(heading, options, **kwargs)
 
+def redirect(location):
+    xbmc.executebuiltin('Container.Update({},replace)'.format(location))
+
 def exception(heading=None):
     if not heading:
         heading = _(_.PLUGIN_EXCEPTION, addon=ADDON_NAME)

@@ -22,6 +22,12 @@ def getInt(key, default=None):
     except:
         return default
 
+def getFloat(key, default=None):
+    try:
+        return float(get(key))
+    except:
+        return default
+
 def setInt(key, value):
     set(key, int(value))
 
