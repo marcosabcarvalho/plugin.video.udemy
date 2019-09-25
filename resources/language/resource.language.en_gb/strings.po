@@ -51,7 +51,7 @@ msgid "No Courses"
 msgstr ""
 
 msgctxt "#30012"
-msgid "Default MP4 Quality"
+msgid "MP4 Quality"
 msgstr ""
 
 msgctxt "#30013"
