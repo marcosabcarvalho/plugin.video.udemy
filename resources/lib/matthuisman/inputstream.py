@@ -33,8 +33,11 @@ class HLS(InputstreamItem):
     manifest_type = 'hls'
     mimetype      = 'application/vnd.apple.mpegurl'
 
+    def __init__(self, force=False):
+        self.force = force
+
     def do_check(self):
-        return settings.getBool('use_ia_hls', False) and supports_hls()
+        return (self.force or settings.getBool('use_ia_hls', False)) and supports_hls()
 
 class MPD(InputstreamItem):
     manifest_type = 'mpd'
