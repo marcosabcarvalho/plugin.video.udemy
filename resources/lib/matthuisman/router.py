@@ -62,9 +62,9 @@ def parse_url(url):
     return function, params
 
 def url_for_func(func, **kwargs):
-    for url in _routes:
-        if _routes[url].__name__ == func.__name__:
-            return build_url(url, **kwargs)
+    for _url in _routes:
+        if _routes[_url].__name__ == func.__name__:
+            return build_url(_url, **kwargs)
 
     raise RouterError(_(_.ROUTER_NO_URL, function_name=func.__name__))
 
@@ -74,8 +74,8 @@ def url_for(func_or_url, **kwargs):
     else:
         return build_url(func_or_url, **kwargs)
 
-def build_url(url, addon_id=ADDON_ID, **kwargs):
-    kwargs[ROUTE_TAG] = url
+def build_url(_url, _addon_id=ADDON_ID, **kwargs):
+    kwargs[ROUTE_TAG] = _url
     is_live = kwargs.pop('_is_live', False)
 
     params = []
@@ -89,7 +89,7 @@ def build_url(url, addon_id=ADDON_ID, **kwargs):
     if is_live:
         params.append((ROUTE_LIVE_TAG, ROUTE_LIVE_SUFFIX))
 
-    return 'plugin://{0}/?{1}'.format(addon_id, urlencode(params))
+    return 'plugin://{0}/?{1}'.format(_addon_id, urlencode(params))
 
 def redirect(url):
     log.debug('Redirect -> {}'.format(url))

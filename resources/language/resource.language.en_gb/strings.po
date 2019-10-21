@@ -278,7 +278,11 @@ msgctxt "#32041"
 msgid "No Items"
 msgstr ""
 
-
+msgctxt "#32042"
+msgid "This manifest contains multiple periods\n"
+"Support for this will be introduced in Kodi 19\n"
+"This content most likely will not play (or will be unreliable)"
+msgstr ""
 
 msgctxt "#32043"
 msgid "Best"
@@ -323,7 +327,11 @@ msgctxt "#32052"
 msgid "Unknown Error"
 msgstr ""
 
-
+msgctxt "#32053"
+msgid "This manifest contains multiple base urls\n"
+"Support for this will hopefully be introduced in Kodi 19\n"
+"There is a chance this content may not play"
+msgstr ""
 
 msgctxt "#32054"
 msgid "Custom"
@@ -333,10 +341,14 @@ msgctxt "#32055"
 msgid "Ask"
 msgstr ""
 
-
+msgctxt "#32056"
+msgid "Failed to fetch / parse playback URL\n"
+"Error: {error}\n"
+"Make sure your entitled to this content and your IP address is allowed (not geo-blocked)\n"
+msgstr ""
 
 msgctxt "#32057"
-msgid "Playback URL returned error code: {error_code}"
+msgid "M3U8 file does not start with #EXTM3U"
 msgstr ""
 
 msgctxt "#32058"
@@ -355,7 +367,9 @@ msgctxt "#32061"
 msgid "Playback Quality"
 msgstr ""
 
-
+msgctxt "#32062"
+msgid "No substreams found in M3U8 File"
+msgstr ""
 
 msgctxt "#32063"
 msgid "Live Play Action"
@@ -400,4 +414,8 @@ msgstr ""
 
 msgctxt "#32073"
 msgid "Disabled"
+msgstr ""
+
+msgctxt "#32074"
+msgid "URL returned error code: {code}"
 msgstr ""

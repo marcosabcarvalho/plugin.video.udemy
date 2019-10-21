@@ -3,6 +3,7 @@ import platform
 import re
 import shutil
 import time
+import struct
 
 import xbmc, xbmcaddon
 
@@ -19,6 +20,9 @@ class InputstreamItem(object):
     license_key   = ''
     mimetype      = ''
     checked       = None
+    license_data  = None
+    challenge     = None
+    response      = None
 
     def do_check(self):
         return False
@@ -55,15 +59,16 @@ class Playready(InputstreamItem):
         return supports_playready()
 
 class Widevine(InputstreamItem):
-    manifest_type = 'mpd'
     license_type  = 'com.widevine.alpha'
-    mimetype      = 'application/dash+xml'
 
-    def __init__(self, license_key=None, content_type='application/octet-stream', challenge='R{SSM}', response=''):
-        self.license_key  = license_key
-        self.content_type = content_type
-        self.challenge    = challenge
-        self.response     = response
+    def __init__(self, license_key=None, content_type='application/octet-stream', challenge='R{SSM}', response='', manifest_type='mpd', mimetype='application/dash+xml', license_data=None):
+        self.license_key   = license_key
+        self.content_type  = content_type
+        self.challenge     = challenge
+        self.response      = response
+        self.manifest_type = manifest_type
+        self.mimetype      = mimetype
+        self.license_data  = license_data
 
     def do_check(self):
         return install_widevine()
@@ -82,6 +87,23 @@ def get_ia_addon(required=False, install=True):
         raise InputStreamError(_.IA_NOT_FOUND)
 
     return None
+
+def set_bandwidth_bin(bps):
+    addon = get_ia_addon(install=False)
+    if not addon:
+        return
+
+    addon_profile = xbmc.translatePath(addon.getAddonInfo('profile')).decode("utf-8")
+    bin_path = os.path.join(addon_profile, 'bandwidth.bin')
+
+    if not os.path.exists(addon_profile):
+        os.makedirs(addon_profile)
+
+    value = bps / 8
+    with open(bin_path, 'wb') as f:
+        f.write(struct.pack('d', value))
+
+    log.debug('IA Set Bandwidth Bin: {} bps'.format(bps))
 
 def set_settings(settings):
     addon = get_ia_addon(install=False)

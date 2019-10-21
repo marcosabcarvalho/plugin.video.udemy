@@ -207,6 +207,9 @@ class Item(object):
             elif headers:
                 li.setProperty('inputstream.adaptive.license_key', '|{0}'.format(headers))
 
+            if self.inputstream.license_data:
+                li.setProperty('inputstream.adaptive.license_data', self.inputstream.license_data)
+
             if self.inputstream.mimetype:
                 li.setMimeType(self.inputstream.mimetype)
                 li.setContentLookup(False)
