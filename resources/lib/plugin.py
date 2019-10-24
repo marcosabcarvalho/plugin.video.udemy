@@ -1,10 +1,10 @@
 import re
 
-from HTMLParser import HTMLParser
+from six.moves.html_parser import HTMLParser
 
-from matthuisman import plugin, gui, settings, userdata, inputstream, signals
-from matthuisman.log import log
-from matthuisman.constants import QUALITY_TAG
+from .matthuisman import plugin, gui, settings, userdata, inputstream, signals
+from .matthuisman.log import log
+from .matthuisman.constants import QUALITY_TAG
 
 from .api import API
 from .language import _

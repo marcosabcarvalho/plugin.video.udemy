@@ -1,4 +1,4 @@
-from matthuisman.language import BaseLanguage
+from .matthuisman.language import BaseLanguage
 
 class Language(BaseLanguage):
     MY_COURSES       = 30001

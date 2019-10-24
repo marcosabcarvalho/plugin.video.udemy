@@ -2,9 +2,9 @@ import hashlib
 import hmac
 import datetime
 
-from matthuisman import userdata, settings
-from matthuisman.session import Session
-from matthuisman.exceptions import Error
+from .matthuisman import userdata, settings
+from .matthuisman.session import Session
+from .matthuisman.exceptions import Error
 
 from .constants import HEADERS, API_URL, DEFAULT_HOST, PAGE_SIZE
 from .language import _
