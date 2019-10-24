@@ -1,6 +1,6 @@
 import requests
 
-import xbmc
+from kodi_six import xbmc
 
 from . import userdata, settings
 from .log import log

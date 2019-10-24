@@ -7,7 +7,7 @@ try:
 except:
     import pickle
 
-import xbmcgui
+from kodi_six import xbmcgui
 
 from .log import log
 from .util import hash_6
@@ -27,13 +27,11 @@ def load():
     if not cache.data and settings.getBool('persist_cache', True):
         cache.data = {}
 
-        data = _window.getProperty(cache_key)
-        
-        if data:
-            try:
-                cache.data = pickle.loads(data)
-            except:
-                pass
+        try:
+            data = _window.getProperty(cache_key)
+            cache.data = pickle.loads(data)
+        except:
+            pass
 
         _window.setProperty(cache_key, "{}")
 
@@ -69,18 +67,23 @@ def key_for(f, *args, **kwargs):
     return _build_key(func_name, *args, **kwargs)
 
 def _build_key(func_name, *args, **kwargs):
-    key = func_name
+    key = func_name.encode('utf8').decode('utf8')
 
     def to_str(item):
         try:
-            return item.encode('utf-8')
+            return item.encode('utf8').decode('utf8')
         except:
             return str(item)
 
     def is_primitive(item):
-        return type(item) in (int, str, dict, list, bool, float, unicode)
+        try:
+            #python2
+            return type(item) in (int, str, dict, list, bool, float, unicode)
+        except:
+            #python3
+            return type(item) in (int, str, dict, list, bool, float)
     
-    for k in sorted(args):
+    for k in args:
         if is_primitive(k):
             key += to_str(k)
 

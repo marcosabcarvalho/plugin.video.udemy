@@ -1,8 +1,8 @@
-from threading import Thread
-from urlparse import urlparse
-
-import xbmc
 import json
+from threading import Thread
+from six.moves.urllib_parse import urlparse
+
+from kodi_six import xbmc
 
 from . import userdata, gui, router, inputstream, settings
 from .language import _

@@ -1,6 +1,7 @@
 import time
-import xbmc
 import random
+
+from kodi_six import xbmc
 
 from . import settings
 from .router import url_for

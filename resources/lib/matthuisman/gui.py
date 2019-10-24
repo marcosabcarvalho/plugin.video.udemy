@@ -1,9 +1,9 @@
 import sys
 import traceback
-from urllib import quote
+from six.moves.urllib_parse import quote
 from contextlib import contextmanager
 
-import xbmcgui, xbmc, xbmcgui
+from kodi_six import xbmcgui, xbmc, xbmcgui
 
 from .constants import ADDON_ID, ADDON_NAME, ADDON_ICON, ADDON_FANART, GUI_DEFAULT_AUTOCLOSE
 from .exceptions import GUIError

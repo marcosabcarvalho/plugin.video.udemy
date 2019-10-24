@@ -105,6 +105,7 @@ class BaseLanguage(object):
     WV_NOT_LATEST               = 32072
     DISABLED                    = 32073
     QUALITY_HTTP_ERROR          = 32074
+    IA_ANDROID_REINSTALL        = 32075
 
     def __getattribute__(self, name):
         attr = object.__getattribute__(self, name)

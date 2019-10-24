@@ -1,5 +1,4 @@
-from urlparse import parse_qsl, urlparse, urlunparse
-from urllib import urlencode, unquote
+from six.moves.urllib_parse import parse_qsl, urlparse, urlunparse, urlencode, unquote
 
 from . import signals
 from .constants import ROUTE_TAG, ADDON_ID, ROUTE_LIVE_TAG, ROUTE_LIVE_SUFFIX, ROUTE_URL_TAG

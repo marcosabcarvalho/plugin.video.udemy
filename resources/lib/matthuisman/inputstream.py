@@ -5,7 +5,7 @@ import shutil
 import time
 import struct
 
-import xbmc, xbmcaddon
+from kodi_six import xbmc, xbmcaddon
 
 from . import gui, settings
 from .log import log
@@ -93,7 +93,7 @@ def set_bandwidth_bin(bps):
     if not addon:
         return
 
-    addon_profile = xbmc.translatePath(addon.getAddonInfo('profile')).decode("utf-8")
+    addon_profile = xbmc.translatePath(addon.getAddonInfo('profile'))
     bin_path = os.path.join(addon_profile, 'bandwidth.bin')
 
     if not os.path.exists(addon_profile):
@@ -146,6 +146,7 @@ def install_widevine(reinstall=False):
     ia_addon     = get_ia_addon(required=True)
     system, arch = get_system_arch()
     kodi_version = get_kodi_version()
+    
     DST_FILES    = {
         'Linux':   'libwidevinecdm.so',
         'Darwin':  'libwidevinecdm.dylib',
@@ -156,6 +157,14 @@ def install_widevine(reinstall=False):
         raise InputStreamError(_(_.IA_KODI18_REQUIRED, system=system))
 
     elif system == 'Android':
+        first_run = int(ia_addon.getSetting('_first_run') or 1)
+
+        if first_run:
+            ia_addon.setSetting('_first_run', '0')
+
+        if first_run or reinstall:
+            gui.ok(_.IA_ANDROID_REINSTALL)
+
         return True
 
     elif system == 'UWP':
@@ -168,7 +177,7 @@ def install_widevine(reinstall=False):
         raise InputStreamError(_(_.IA_NOT_SUPPORTED, system=system, arch=arch, kodi_version=kodi_version))
 
     last_check   = int(ia_addon.getSetting('_last_check') or 0)
-    decryptpath  = xbmc.translatePath(ia_addon.getSetting('DECRYPTERPATH')).decode("utf-8")
+    decryptpath  = xbmc.translatePath(ia_addon.getSetting('DECRYPTERPATH'))
     wv_path      = os.path.join(decryptpath, DST_FILES[system])
     installed    = md5sum(wv_path)
 

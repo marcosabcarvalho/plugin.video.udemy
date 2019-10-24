@@ -1,6 +1,6 @@
 import logging
 
-import xbmc
+from kodi_six import xbmc
 
 from .constants import LOG_ID, LOG_FORMAT
 
@@ -21,7 +21,7 @@ class LoggerHandler(logging.StreamHandler):
     def emit(self, record):
         msg   = self.format(record)
         level = self.LEVELS.get(record.levelno, xbmc.LOGDEBUG)
-        xbmc.log(msg.encode('utf-8'), level)
+        xbmc.log(msg, level)
 
 logging.setLoggerClass(Logger)
 

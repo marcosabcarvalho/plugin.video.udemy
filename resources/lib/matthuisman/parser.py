@@ -1,8 +1,6 @@
 import re
 import xml.etree.ElementTree as ET
 
-from xml.parsers import expat
-
 from . import gui
 from .language import _
 from .constants import QUALITY_BEST, QUALITY_LOWEST
@@ -108,20 +106,24 @@ class M3U8(Parser):
 
 class MPD(Parser):
     def parse(self, text):
-        class DisableXmlNamespaces:
-            def __enter__(self):
-                self.oldcreate = expat.ParserCreate
-                expat.ParserCreate = lambda encoding, sep: self.oldcreate(encoding, None)
-                    
-            def __exit__(self, type, value, traceback):
-                expat.ParserCreate = self.oldcreate
+        def strip_namespaces(tree):
+            for el in tree.iter():
+                tag = el.tag
+                if tag and isinstance(tag, str) and tag[0] == '{':
+                    el.tag = tag.partition('}')[2]
+                attrib = el.attrib
+                if attrib:
+                    for name, value in list(attrib.items()):
+                        if name and isinstance(name, str) and name[0] == '{':
+                            del attrib[name]
+                            attrib[name.partition('}')[2]] = value
 
-        with DisableXmlNamespaces():
-            root = ET.fromstring(text)
+        root = ET.fromstring(text)
+        strip_namespaces(root)
 
         num_baseurls = len(root.findall("./BaseURL"))
         num_periods  = len(root.findall("./Period"))
-        
+
         if num_periods > 1 and get_kodi_version() < 19:
             gui.ok(_.MULTI_PERIOD_WARNING)
         elif num_baseurls > 1 and get_kodi_version() < 19:

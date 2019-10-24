@@ -1,6 +1,6 @@
 import json
 
-import xbmcaddon
+from kodi_six import xbmcaddon
 
 from .constants import ADDON_ID
 

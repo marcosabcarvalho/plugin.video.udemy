@@ -368,7 +368,7 @@ msgid "Playback Quality"
 msgstr ""
 
 msgctxt "#32062"
-msgid "No substreams found in M3U8 File"
+msgid "No substreams found in playback file"
 msgstr ""
 
 msgctxt "#32063"
@@ -418,4 +418,9 @@ msgstr ""
 
 msgctxt "#32074"
 msgid "URL returned error code: {code}"
+msgstr ""
+
+msgctxt "#32075"
+msgid "Widevine CDM is built-in to Android\n"
+"If content does not play, your Android device may not have a suitable Widevine level."
 msgstr ""
